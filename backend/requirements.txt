@@ -1,0 +1,44 @@
+# --- Web framework ---------------------------------------------------------
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+
+# --- Settings & validation ---------------------------------------------------
+pydantic==2.9.2
+pydantic-settings==2.6.1
+
+# --- Database ----------------------------------------------------------------
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.13.3
+pgvector==0.3.6
+
+# --- Cache / pub-sub -----------------------------------------------------
+redis==5.2.0
+
+# --- LLM client --------------------------------------------------------------
+# anthropic bumped from 0.39.0 (Module 1) to 0.116.0 in Module 3: 0.39.0
+# pins an httpx version incompatible with the httpx openai/google-genai
+# require, which broke dependency resolution once multi-provider support
+# was added. AnthropicLLMClient's public surface (messages.create) is
+# unaffected by this bump.
+anthropic==0.116.0
+openai==2.44.0
+google-genai==1.5.0
+tenacity==9.0.0
+
+# --- Auth ----------------------------------------------------------------
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+
+# --- Observability -------------------------------------------------------
+structlog==24.4.0
+
+# --- Utilities -----------------------------------------------------------
+python-dotenv==1.0.1
+httpx>=0.27.2,<1.0.0
+
+# --- Testing ---------------------------------------------------------------
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
