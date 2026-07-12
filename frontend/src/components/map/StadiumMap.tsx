@@ -7,7 +7,7 @@ export function StadiumMap() {
   const { liveState } = useAppStore();
 
   return (
-    <div className="relative w-full h-full bg-[#050505] overflow-hidden rounded-xl border border-border/20 shadow-2xl flex items-center justify-center">
+    <div className="relative w-full h-full bg-card overflow-hidden rounded-xl border border-border/20 shadow-2xl flex items-center justify-center">
       {/* Subtle Tech Grid Background */}
       <div 
         className="absolute inset-0 opacity-[0.04]" 
@@ -22,7 +22,7 @@ export function StadiumMap() {
       
       {/* Vector Stadium Structure */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <svg viewBox="0 0 800 600" className="w-[85%] h-[85%] opacity-20 text-primary" stroke="currentColor" fill="none">
+        <svg viewBox="0 0 800 600" className="w-[85%] h-[85%] opacity-40 text-primary" stroke="currentColor" fill="none">
            {/* Outer Concourse */}
            <rect x="50" y="50" width="700" height="500" rx="200" strokeWidth="1.5" />
            <rect x="100" y="100" width="600" height="400" rx="150" strokeWidth="1" strokeDasharray="4 6" />
