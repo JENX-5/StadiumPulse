@@ -62,7 +62,7 @@ export function connectWebSocket() {
   };
 
   ws.onerror = (err) => {
-    console.error("WebSocket error:", err);
+    console.warn("WebSocket error:", err);
     ws?.close();
   };
 }

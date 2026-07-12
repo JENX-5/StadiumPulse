@@ -65,7 +65,7 @@ export function IncidentPanel() {
                 >
                   <div className="flex items-start justify-between mb-1.5">
                     <span className="text-sm font-medium leading-none group-hover:text-primary transition-colors">
-                      {incident.title || "Incident Report"}
+                      {incident.raw_text.length > 50 ? incident.raw_text.substring(0, 50) + "…" : incident.raw_text}
                     </span>
                     <Badge variant="outline" className={`text-[9px] uppercase font-bold tracking-wider rounded-sm px-1.5 border ${getSeverityColor(incident.severity)}`}>
                       {incident.severity}

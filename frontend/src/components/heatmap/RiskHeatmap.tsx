@@ -1,17 +1,31 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 
 import { useAppStore } from "@/store/useAppStore";
-import { riskApi } from "@/services/api";
+import { riskApi, zonesApi } from "@/services/api";
+
+export const ZONE_CENTERS: Record<string, { cx: number, cy: number, r: number }> = {
+  "North Concourse": { cx: 400, cy: 100, r: 150 },
+  "South Concourse": { cx: 400, cy: 500, r: 150 },
+  "Main Entrance": { cx: 100, cy: 300, r: 120 },
+  "Section 114": { cx: 700, cy: 300, r: 120 },
+  "VIP Suites": { cx: 400, cy: 300, r: 140 },
+};
 
 export function RiskHeatmap() {
-  const { liveState, venueId } = useAppStore();
+  const { venueId } = useAppStore();
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({});
+  
+  const { data: zones = [] } = useQuery({
+    queryKey: ["zones", venueId],
+    queryFn: () => venueId ? zonesApi.list(venueId) : Promise.resolve([]),
+    enabled: !!venueId,
+  });
   
   useEffect(() => {
     if (!venueId) return;
     
-    // Poll the risk heatmap every 5 seconds
     const fetchHeatmap = () => {
       riskApi.getHeatmap(venueId)
         .then(data => setHeatmapData(data))
@@ -23,37 +37,42 @@ export function RiskHeatmap() {
     return () => clearInterval(interval);
   }, [venueId]);
 
-  // Use the max risk score from the backend for the severe hotspot
-  const maxRisk = Object.values(heatmapData).length > 0 
-    ? Math.max(...Object.values(heatmapData)) 
-    : 0;
-
-  // We use the real global_crowd_density from the operational engine if connected,
-  // otherwise default to a low idle state.
-  const density = liveState?.global_crowd_density ?? 0.15;
-  const riskOpacity = Math.max(0.1, density);
-
   return (
-    <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-70">
-      {/* Primary baseline crowd density heatmap */}
-      <motion.div
-        animate={{
-          opacity: [riskOpacity * 0.7, riskOpacity, riskOpacity * 0.7],
-          scale: [0.97, 1, 0.97],
-        }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[20%] left-[20%] w-[60%] h-[60%] rounded-[100%] bg-primary blur-[120px]"
-      />
+    <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-90 flex items-center justify-center z-10">
+      <svg viewBox="0 0 800 600" className="w-[85%] h-[85%]">
+        <defs>
+          <filter id="heatmap-blur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="40" />
+          </filter>
+        </defs>
+        {zones.map((zone) => {
+          const center = ZONE_CENTERS[zone.name];
+          if (!center) return null;
+          
+          const risk = heatmapData[zone.id] || 0;
+          
+          let color = "rgba(59, 130, 246, 0.1)"; // Idle / Safe (Blue)
+          if (risk >= 70) color = "rgba(239, 68, 68, 0.8)"; // Critical (Red)
+          else if (risk >= 40) color = "rgba(234, 179, 8, 0.6)"; // Warning (Yellow)
+          else if (risk > 10) color = "rgba(34, 197, 94, 0.3)"; // Active (Green)
 
-      {/* High Risk Hotspot (Driven by real backend risk scores) */}
-      {maxRisk > 60 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.5, scale: 1 }}
-          transition={{ duration: 2 }}
-          className="absolute top-[25%] left-[55%] w-[30%] h-[40%] rounded-full bg-destructive blur-[90px]"
-        />
-      )}
+          const radiusScale = 1 + (risk / 100) * 0.4;
+
+          return (
+            <motion.circle
+              key={zone.id}
+              cx={center.cx}
+              cy={center.cy}
+              r={center.r * radiusScale}
+              fill={color}
+              filter="url(#heatmap-blur)"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, r: center.r * radiusScale, fill: color }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+          );
+        })}
+      </svg>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 export interface IncidentResponse {
   id: string;
   venue_id: string;
-  title: string;
+  zone_id?: string | null;
   status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
   severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
   source: string;

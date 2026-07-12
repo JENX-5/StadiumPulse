@@ -16,7 +16,7 @@ export function AIInsightsPanel() {
     memoryApi.list(venueId)
       .then(memories => {
         if (memories.length > 0) {
-          setLatestMemory(memories[0]);
+          setLatestMemory(memories[0] ?? null);
         }
       })
       .catch(err => console.error("Failed to fetch memories", err));
