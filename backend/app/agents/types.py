@@ -13,7 +13,7 @@ API responses, JSONB columns) or needs the schema validation that
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -103,7 +103,7 @@ class AgentRequest(BaseModel):
     input_data: dict[str, Any] = Field(default_factory=dict)
     context: AgentContext | None = None
     memories: list[AgentMemory] = Field(default_factory=list)
-    requested_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    requested_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AgentResponse(BaseModel):
@@ -116,7 +116,7 @@ class AgentResponse(BaseModel):
     error_message: str | None = None
     duration_ms: float | None = None
     attempts: int = 1
-    completed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    completed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TaskResult(BaseModel):
@@ -151,7 +151,7 @@ class NegotiationMessage(BaseModel):
     content: dict[str, Any] = Field(default_factory=dict)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     rationale: str | None = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ConsensusDecision(BaseModel):

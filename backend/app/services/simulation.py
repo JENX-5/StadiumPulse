@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 from app.core.events import Event, EventChannel, EventSource
 from app.schemas.simulation import SimulationControl, SimulationStatusResponse
@@ -23,6 +23,9 @@ class SimulationEngine:
         self.is_paused = False
         self.speed_multiplier = 1.0
         self.deterministic = False
+        # Set on "start" (and required there); carried over across
+        # pause/resume/stop so every tick in a run targets the same venue.
+        self.venue_id: str | None = None
         self._task: asyncio.Task | None = None
 
     def apply_control(self, control: SimulationControl) -> SimulationStatusResponse:
@@ -31,6 +34,10 @@ class SimulationEngine:
             self.is_paused = False
             self.speed_multiplier = control.speed_multiplier
             self.deterministic = control.deterministic
+            # Fall back to whatever venue was last used rather than silently
+            # generating a random one — a client that starts without a
+            # venue_id almost certainly meant to reuse the current session.
+            self.venue_id = control.venue_id or self.venue_id
             if self._task is None or self._task.done():
                 self._task = asyncio.create_task(self._simulation_loop())
 
@@ -55,25 +62,26 @@ class SimulationEngine:
             is_paused=self.is_paused,
             speed_multiplier=self.speed_multiplier,
             deterministic=self.deterministic,
+            venue_id=self.venue_id,
         )
 
     async def _simulation_loop(self):
-        logger.info("Simulation Engine started.")
+        logger.info(f"Simulation Engine started for venue={self.venue_id}.")
         try:
             while self.is_running:
                 if self.is_paused:
                     await asyncio.sleep(1.0)
                     continue
 
-                # In a full implementation, we'd pull the real venue_id and generate
-                # realistic simulated data (crowd density per zone, random incidents).
+                # In a full implementation, we'd generate realistic simulated
+                # data per zone (crowd density per zone, random incidents).
                 # For now, we publish a simple tick event to the RISK_SCORES channel.
                 event = Event(
                     event_type="simulation.tick",
                     source=EventSource.SIMULATION,
-                    venue_id=str(uuid.uuid4()),  # Demo venue UUID placeholder
+                    venue_id=self.venue_id or str(uuid.uuid4()),
                     payload={
-                        "timestamp": datetime.now(UTC).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "global_crowd_density": 0.85,
                         "global_noise_level": 82.5,
                     },

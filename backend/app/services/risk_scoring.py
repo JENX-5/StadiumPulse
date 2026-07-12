@@ -30,7 +30,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 
 from redis.asyncio import Redis
@@ -169,7 +169,7 @@ class RiskScoringService:
         once per crossing instead of every tick a zone stays hot.
         """
         score, breakdown = self.compute_score(factors)
-        computed_at = datetime.now(UTC)
+        computed_at = datetime.now(timezone.utc)
 
         previous = await self.get_current_score(zone_id)
         crossed = score >= self.threshold and (

@@ -9,6 +9,7 @@ logic — it is composition only.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -22,6 +23,7 @@ from app.core.config import get_settings
 from app.core.container import build_container
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.services.event_broadcaster import run_event_bridge
 
 settings = get_settings()
 configure_logging(settings)
@@ -32,10 +34,14 @@ logger: structlog.stdlib.BoundLogger = get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("application_starting", env=settings.env)
     app.state.container = await build_container(settings)
+    # Bridges Redis pub/sub (EventBus) to connected browser WebSocket clients
+    # — see app/services/event_broadcaster.py for why this exists.
+    bridge_task = asyncio.create_task(run_event_bridge(app.state.container.event_bus))
     try:
         yield
     finally:
         logger.info("application_shutting_down")
+        bridge_task.cancel()
         await app.state.container.shutdown()
 
 

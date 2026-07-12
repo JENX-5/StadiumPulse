@@ -1,8 +1,28 @@
 import { apiRequest } from "@/lib/api-client";
 import { 
-  IncidentResponse, OperationalState, SimulationControl, SimulationStatusResponse,
-  Resource, TournamentMemory, ZoneRiskResponse 
+  IncidentCreate, IncidentResponse, OperationalState, SimulationControl, SimulationStatusResponse,
+  Resource, TournamentMemory, ZoneResponse, ZoneRiskResponse 
 } from "@/types/api";
+import { AuthUser } from "@/store/useAuthStore";
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export const authApi = {
+  // Backend route is a strict OAuth2 password-grant endpoint
+  // (`OAuth2PasswordRequestForm`), so this must be form-urlencoded with
+  // `username`/`password` keys, not JSON.
+  login: (email: string, password: string) =>
+    apiRequest<TokenResponse>("/auth/token", {
+      method: "POST",
+      form: true,
+      body: new URLSearchParams({ username: email, password }).toString(),
+    }),
+
+  me: () => apiRequest<AuthUser>("/auth/me"),
+};
 
 export const incidentsApi = {
   listByVenue: (venueId: string) => 
@@ -10,6 +30,17 @@ export const incidentsApi = {
     
   get: (incidentId: string) => 
     apiRequest<IncidentResponse>(`/incidents/${incidentId}`),
+
+  create: (payload: IncidentCreate) =>
+    apiRequest<IncidentResponse>("/incidents/", {
+      method: "POST",
+      body: payload,
+    }),
+};
+
+export const zonesApi = {
+  list: (venueId: string) =>
+    apiRequest<ZoneResponse[]>(`/zones/?venue_id=${venueId}`),
 };
 
 export const stateApi = {

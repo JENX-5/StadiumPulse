@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import structlog
 
@@ -88,7 +88,7 @@ class AgentMetricsRegistry:
             trace_id=str(uuid.uuid4()),
             agent_id=agent_id,
             task_type=task_type,
-            started_at=datetime.now(UTC),
+            started_at=datetime.now(timezone.utc),
         )
         self._traces.setdefault(agent_id, []).append(trace)
         traces = self._traces[agent_id]
@@ -104,7 +104,7 @@ class AgentMetricsRegistry:
         error_message: str | None = None,
         tokens: TokenUsage | None = None,
     ) -> None:
-        trace.finished_at = datetime.now(UTC)
+        trace.finished_at = datetime.now(timezone.utc)
         trace.status = "succeeded" if success else "failed"
         trace.error_message = error_message
 

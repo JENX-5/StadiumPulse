@@ -15,7 +15,7 @@ today.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 
 from app.agents.types import AgentMemory
@@ -62,7 +62,7 @@ class InMemoryMemoryStore(MemoryInterface):
         self, key: str, content: str, *, metadata: dict[str, Any] | None = None
     ) -> None:
         self._items[key] = AgentMemory(memory_id=key, content=content, metadata=metadata or {})
-        self._stored_at[key] = datetime.now(UTC)
+        self._stored_at[key] = datetime.now(timezone.utc)
 
     async def get(self, key: str) -> AgentMemory | None:
         return self._items.get(key)

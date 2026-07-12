@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -49,7 +49,7 @@ class Event(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     event_type: str
     source: Literal[EventSource.SIMULATION, EventSource.LIVE]
-    occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     venue_id: str
     payload: dict[str, Any] = Field(default_factory=dict)
 

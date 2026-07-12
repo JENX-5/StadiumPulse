@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import structlog
 
@@ -77,7 +77,7 @@ class BaseAgent(ABC):
         propagate.
         """
         trace = self._metrics.start_trace(self.agent_id, request.task_type)
-        started = datetime.now(UTC)
+        started = datetime.now(timezone.utc)
         attempts = 0
 
         try:
@@ -197,7 +197,7 @@ class BaseAgent(ABC):
         attempts: int,
         started: datetime,
     ) -> AgentResponse:
-        duration_ms = (datetime.now(UTC) - started).total_seconds() * 1000
+        duration_ms = (datetime.now(timezone.utc) - started).total_seconds() * 1000
         return AgentResponse(
             request_id=request.request_id,
             agent_id=self.agent_id,

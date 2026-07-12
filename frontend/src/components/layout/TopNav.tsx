@@ -1,9 +1,21 @@
-import { Activity, Bell, Settings } from "lucide-react";
+"use client";
+
+import { Activity, Bell, LogOut, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/useAuthStore";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function TopNav() {
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+
+  function handleLogout() {
+    logout();
+    router.push("/login");
+  }
+
   return (
     <header className="h-14 flex shrink-0 items-center justify-between px-4 lg:px-6 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
       <div className="flex items-center gap-2.5">
@@ -19,6 +31,14 @@ export function TopNav() {
       </div>
       
       <div className="flex items-center gap-1">
+        {user && (
+          <div className="hidden sm:flex items-center gap-2 mr-1 pr-3 border-r border-border/40">
+            <span className="text-xs font-medium text-foreground">{user.full_name}</span>
+            <span className="px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground text-[10px] uppercase font-bold tracking-wide">
+              {user.role}
+            </span>
+          </div>
+        )}
         <ThemeToggle />
         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground relative">
           <Bell className="h-4 w-4" />
@@ -27,6 +47,15 @@ export function TopNav() {
         </Button>
         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
           <Settings className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          onClick={handleLogout}
+          title="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
         </Button>
       </div>
     </header>

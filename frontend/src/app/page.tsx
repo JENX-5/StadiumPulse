@@ -16,6 +16,7 @@ import { IncidentPanel } from "@/components/dashboard/IncidentPanel";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StadiumMap } from "@/components/map/StadiumMap";
 import { KPICards } from "@/components/metrics/KPICards";
+import { SimulationControlPanel } from "@/components/simulation/SimulationControlPanel";
 import { MissionTimeline } from "@/components/timeline/MissionTimeline";
 import { stateApi } from "@/services/api";
 import { connectWebSocket, disconnectWebSocket } from "@/services/websocket";
@@ -54,8 +55,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Area (AI Insights & Incidents List) */}
+          {/* Right Area (Simulation Controls, AI Insights & Incidents List) */}
           <div className="w-80 xl:w-96 flex flex-col gap-3 lg:gap-5 shrink-0">
+            <div className="shrink-0">
+              <SimulationControlPanel />
+            </div>
             <div className="shrink-0">
               <AIInsightsPanel />
             </div>

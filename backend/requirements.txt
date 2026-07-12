@@ -30,6 +30,9 @@ tenacity==9.0.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
+# Required by FastAPI's OAuth2PasswordRequestForm (used in /auth/token) to
+# parse form-encoded request bodies.
+python-multipart==0.0.17
 
 # --- Observability -------------------------------------------------------
 structlog==24.4.0
