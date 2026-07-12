@@ -7,7 +7,8 @@ from app.agents.negotiation import NegotiationEngine
 from app.agents.types import ConsensusOutcome
 
 
-def test_full_negotiation_session_resolves_to_highest_confidence_proposal():
+@pytest.mark.asyncio
+async def test_full_negotiation_session_resolves_to_highest_confidence_proposal():
     engine = NegotiationEngine()
     session = engine.start_session("incident-1")
 
@@ -24,7 +25,7 @@ def test_full_negotiation_session_resolves_to_highest_confidence_proposal():
     session.vote(agent_id="predictive_intelligence", supports=True)
     session.vote(agent_id="incident_analysis", supports=False)
 
-    decision = session.resolve()
+    decision = await session.resolve()
 
     assert decision.outcome == ConsensusOutcome.ACCEPTED
     assert decision.decision == {"action": "add_medic"}
@@ -33,11 +34,12 @@ def test_full_negotiation_session_resolves_to_highest_confidence_proposal():
     assert session.turn_count == 7  # 6 turns + the resolution turn
 
 
-def test_no_proposals_yields_no_consensus():
+@pytest.mark.asyncio
+async def test_no_proposals_yields_no_consensus():
     engine = NegotiationEngine()
     session = engine.start_session("incident-2")
 
-    decision = session.resolve()
+    decision = await session.resolve()
     assert decision.outcome == ConsensusOutcome.NO_CONSENSUS
 
 
@@ -49,11 +51,12 @@ def test_resolution_before_any_proposal_is_invalid():
         session.vote(agent_id="x", supports=True)
 
 
-def test_cannot_add_turns_after_resolution():
+@pytest.mark.asyncio
+async def test_cannot_add_turns_after_resolution():
     engine = NegotiationEngine()
     session = engine.start_session("incident-4")
     session.propose(agent_id="a", content={}, confidence=0.5)
-    session.resolve()
+    await session.resolve()
 
     with pytest.raises(NegotiationError):
         session.propose(agent_id="b", content={}, confidence=0.5)

@@ -1,12 +1,27 @@
+import { useEffect, useState } from "react";
 import { BrainCircuit, TrendingUp } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppStore } from "@/store/useAppStore";
+import { memoryApi } from "@/services/api";
+import { TournamentMemory } from "@/types/api";
 
 export function AIInsightsPanel() {
-  const { liveState } = useAppStore();
+  const { liveState, venueId } = useAppStore();
+  const [latestMemory, setLatestMemory] = useState<TournamentMemory | null>(null);
   
+  useEffect(() => {
+    if (!venueId) return;
+    memoryApi.list(venueId)
+      .then(memories => {
+        if (memories.length > 0) {
+          setLatestMemory(memories[0]);
+        }
+      })
+      .catch(err => console.error("Failed to fetch memories", err));
+  }, [venueId]);
+
   const density = liveState?.global_crowd_density ?? 0.15;
   const isHighRisk = density > 0.6;
 
@@ -29,19 +44,19 @@ export function AIInsightsPanel() {
       </CardHeader>
       
       <CardContent className="p-4 z-10 flex flex-col gap-4">
-        {/* Mock Forecast based on current operational density */}
+        {/* Memory Insight from TMA */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Crowd Forecast (T+15m)</span>
-            <Badge variant="outline" className={`text-[9px] uppercase tracking-wider px-1.5 py-0 rounded-sm ${isHighRisk ? 'text-destructive border-destructive/50 bg-destructive/10' : 'text-primary border-primary/50 bg-primary/10'}`}>
-              {isHighRisk ? 'Critical' : 'Stable'}
+            <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Pattern Recognition Memory</span>
+            <Badge variant="outline" className={`text-[9px] uppercase tracking-wider px-1.5 py-0 rounded-sm text-primary border-primary/50 bg-primary/10`}>
+              {latestMemory?.pattern_type || "No patterns"}
             </Badge>
           </div>
           
           <div className="text-sm leading-relaxed text-foreground/90">
-            {isHighRisk 
-              ? "Models indicate a 87% probability of severe congestion at Gate C in the next 15 minutes. Pre-emptive redirection of ingress traffic recommended."
-              : "Flow rates remain optimal. Expected peak ingress will naturally decay over the next 30 minutes with no projected bottlenecks."}
+            {latestMemory 
+              ? latestMemory.summary
+              : "No historical patterns detected matching current telemetry."}
           </div>
         </div>
 

@@ -31,3 +31,25 @@ export interface OperationalState {
   available_resources: number;
   [key: string]: any;
 }
+
+export interface Resource {
+  id: string;
+  label: string;
+  resource_type: "medical" | "security" | "cleaning" | "volunteer" | "maintenance";
+  status: "available" | "assigned" | "busy" | "offline";
+  current_zone_id: string | null;
+}
+
+export interface TournamentMemory {
+  id: string;
+  summary: string;
+  pattern_type: string;
+  source_incident_ids: string[];
+  created_at: string;
+}
+
+export interface ZoneRiskResponse {
+  zone_id: string;
+  risk_score: number;
+  contributing_factors: Record<string, number>;
+}

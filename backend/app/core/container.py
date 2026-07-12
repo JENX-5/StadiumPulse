@@ -20,13 +20,20 @@ import structlog
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.agents.implementations.incident_analysis import IncidentAnalysisAgent
+from app.agents.implementations.operational_consensus import OperationalConsensusAgent
+from app.agents.implementations.predictive_intelligence import PredictiveIntelligenceAgent
+from app.agents.implementations.resource_coordination import ResourceCoordinationAgent
+from app.agents.implementations.tournament_memory import TournamentMemoryAgent
 from app.agents.registry import AgentRegistry
 from app.core.config import Settings
 from app.core.llm_client import LLMClient
 from app.core.llm_providers import build_llm_client
 from app.db.session import create_engine, create_session_factory
+from app.services.dispatch import DispatchService
 from app.services.event_bus import EventBus
 from app.services.notification import NotificationInfrastructure
+from app.services.risk_scoring import RiskScoringService
 from app.services.simulation import SimulationEngine
 from app.services.state import OperationalStateManager
 from app.services.timeline import TimelineEngine
@@ -49,9 +56,12 @@ class Container:
     timeline_engine: TimelineEngine
     notification_infra: NotificationInfrastructure
     simulation_engine: SimulationEngine
+    risk_scoring_service: RiskScoringService
+    dispatch_service: DispatchService
 
     async def shutdown(self) -> None:
         """Release external resources cleanly on application shutdown."""
+        await self.risk_scoring_service.close()
         await self.redis.aclose()
         await self.db_engine.dispose()
         logger.info("container_shutdown_complete")
@@ -76,12 +86,25 @@ async def build_container(settings: Settings) -> Container:
     timeline_engine = TimelineEngine(redis_url=settings.redis_url)
     notification_infra = NotificationInfrastructure(redis_url=settings.redis_url)
     simulation_engine = SimulationEngine(event_bus=event_bus)
+    # Only Redis-backed service that also needs Postgres — history is
+    # write-through per ADR-0004, so it takes the shared session factory
+    # rather than talking to Postgres via a route/service of its own.
+    risk_scoring_service = RiskScoringService(
+        redis_url=settings.redis_url,
+        db_session_factory=db_session_factory,
+    )
+    dispatch_service = DispatchService(session_factory=db_session_factory)
 
-    # Empty at this stage — Module 3 provides the registry infrastructure
-    # only. Concrete agents (Predictive Intelligence, Incident Analysis,
-    # etc.) call `container.agent_registry.register(...)` from their own
-    # module's startup wiring once they exist.
     agent_registry = AgentRegistry()
+    # Registered here rather than at import time so every agent gets the
+    # same request-scoped-free singletons (llm_client, etc.) the rest of
+    # the container uses — remaining agents (PIA, RCA, OCA, TMA) register
+    # the same way as their modules land.
+    agent_registry.register(IncidentAnalysisAgent(llm_client=llm_client))
+    agent_registry.register(OperationalConsensusAgent(llm_client=llm_client))
+    agent_registry.register(PredictiveIntelligenceAgent(llm_client=llm_client))
+    agent_registry.register(ResourceCoordinationAgent(llm_client=llm_client))
+    agent_registry.register(TournamentMemoryAgent(llm_client=llm_client))
 
     container = Container(
         settings=settings,
@@ -95,6 +118,8 @@ async def build_container(settings: Settings) -> Container:
         timeline_engine=timeline_engine,
         notification_infra=notification_infra,
         simulation_engine=simulation_engine,
+        risk_scoring_service=risk_scoring_service,
+        dispatch_service=dispatch_service,
     )
     logger.info("container_built", env=settings.env)
     return container

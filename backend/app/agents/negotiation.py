@@ -69,7 +69,7 @@ class ConsensusStrategy(Protocol):
     `ConsensusDecision`. Concrete strategies (majority vote with veto
     rules, weighted-by-agent-track-record, etc.) belong to future modules."""
 
-    def resolve(
+    async def resolve(
         self, incident_id: str, messages: list[NegotiationMessage]
     ) -> ConsensusDecision: ...
 
@@ -84,7 +84,7 @@ class HighestConfidenceStrategy:
     out of scope for Module 3.
     """
 
-    def resolve(self, incident_id: str, messages: list[NegotiationMessage]) -> ConsensusDecision:
+    async def resolve(self, incident_id: str, messages: list[NegotiationMessage]) -> ConsensusDecision:
         proposals = [m for m in messages if m.phase == NegotiationMessageType.PROPOSAL]
         votes = [m for m in messages if m.phase == NegotiationMessageType.VOTE]
 
@@ -224,10 +224,10 @@ class NegotiationSession:
             rationale=rationale,
         )
 
-    def resolve(self) -> ConsensusDecision:
+    async def resolve(self) -> ConsensusDecision:
         """Run the configured `ConsensusStrategy` and record the resulting
         decision as the session's terminal RESOLUTION turn."""
-        decision = self._strategy.resolve(self.incident_id, self.history)
+        decision = await self._strategy.resolve(self.incident_id, self.history)
         self._append(
             NegotiationMessageType.RESOLUTION,
             agent_id="negotiation_engine",

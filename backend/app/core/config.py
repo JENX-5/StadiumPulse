@@ -77,7 +77,7 @@ class Settings(BaseSettings):
 
     # --- API ---------------------------------------------------------------------
     api_v1_prefix: str = Field(default="/api/v1", alias="API_V1_PREFIX")
-    cors_origins: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
+    cors_origins: str = Field(default="http://localhost:3000,http://localhost:3001", alias="CORS_ORIGINS")
 
     @field_validator("anthropic_api_key")
     @classmethod
