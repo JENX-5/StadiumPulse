@@ -1,6 +1,7 @@
 import { Activity, Bell, Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function TopNav() {
   return (
@@ -18,6 +19,7 @@ export function TopNav() {
       </div>
       
       <div className="flex items-center gap-1">
+        <ThemeToggle />
         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground relative">
           <Bell className="h-4 w-4" />
           {/* Animated red dot for unread high-priority notifications */}
