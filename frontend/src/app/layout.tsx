@@ -17,7 +17,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
-      <body className="antialiased min-h-screen bg-background text-foreground">
+      <body suppressHydrationWarning className="antialiased min-h-screen bg-background text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
