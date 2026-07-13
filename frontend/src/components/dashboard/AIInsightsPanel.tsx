@@ -8,7 +8,7 @@ import { memoryApi } from "@/services/api";
 import { TournamentMemory } from "@/types/api";
 
 export function AIInsightsPanel() {
-  const { liveState, venueId } = useAppStore();
+  const { liveState, venueId, riskHistory } = useAppStore();
   const [latestMemory, setLatestMemory] = useState<TournamentMemory | null>(null);
   
   useEffect(() => {
@@ -23,7 +23,6 @@ export function AIInsightsPanel() {
   }, [venueId]);
 
   const density = liveState?.global_crowd_density ?? 0.15;
-  const isHighRisk = density > 0.6;
 
   return (
     <Card className="flex flex-col bg-primary/5 backdrop-blur-md border-primary/20 overflow-hidden relative shadow-2xl">
@@ -67,12 +66,14 @@ export function AIInsightsPanel() {
              <TrendingUp className="h-3 w-3" /> Risk Trajectory
            </div>
            <div className="flex items-end gap-1 h-8">
-             {/* Dummy mini sparkline */}
-             {[40, 45, 42, 50, 55, 60, isHighRisk ? 85 : 58, isHighRisk ? 90 : 55].map((val, i) => (
+             {(riskHistory.length > 0
+               ? riskHistory.map((score) => Math.round(score * 100))
+               : [15, 15, 15, 15, 15, 15, 15, 15]
+             ).map((val, i) => (
                <div 
                  key={i} 
-                 className={`w-full rounded-t-sm transition-all duration-500 ${val > 80 ? 'bg-destructive' : 'bg-primary/40'}`} 
-                 style={{ height: `${val}%` }} 
+                 className={`w-full rounded-t-sm transition-all duration-500 ${val > 70 ? 'bg-destructive' : val > 40 ? 'bg-amber-500/60' : 'bg-primary/40'}`} 
+                 style={{ height: `${Math.max(val, 5)}%` }} 
                />
              ))}
            </div>

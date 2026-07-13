@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
@@ -15,27 +14,19 @@ export const ZONE_CENTERS: Record<string, { cx: number, cy: number, r: number }>
 
 export function RiskHeatmap() {
   const { venueId } = useAppStore();
-  const [heatmapData, setHeatmapData] = useState<Record<string, number>>({});
   
   const { data: zones = [] } = useQuery({
     queryKey: ["zones", venueId],
     queryFn: () => venueId ? zonesApi.list(venueId) : Promise.resolve([]),
     enabled: !!venueId,
   });
-  
-  useEffect(() => {
-    if (!venueId) return;
-    
-    const fetchHeatmap = () => {
-      riskApi.getHeatmap(venueId)
-        .then(data => setHeatmapData(data))
-        .catch(err => console.error("Failed to fetch risk heatmap", err));
-    };
-    
-    fetchHeatmap();
-    const interval = setInterval(fetchHeatmap, 5000);
-    return () => clearInterval(interval);
-  }, [venueId]);
+
+  const { data: heatmapData = {} } = useQuery({
+    queryKey: ["risk-heatmap", venueId],
+    queryFn: () => riskApi.getHeatmap(venueId),
+    enabled: !!venueId,
+    refetchInterval: 5000,
+  });
 
   return (
     <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-90 flex items-center justify-center z-10">

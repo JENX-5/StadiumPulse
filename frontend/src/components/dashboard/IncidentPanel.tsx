@@ -68,7 +68,7 @@ export function IncidentPanel() {
                       {incident.raw_text.length > 50 ? incident.raw_text.substring(0, 50) + "…" : incident.raw_text}
                     </span>
                     <Badge variant="outline" className={`text-[9px] uppercase font-bold tracking-wider rounded-sm px-1.5 border ${getSeverityColor(incident.severity)}`}>
-                      {incident.severity}
+                      {incident.severity.toUpperCase()}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">

@@ -7,6 +7,9 @@ from app.core.events import Event, EventChannel
 from app.db.models.incident import Incident, IncidentSeverity, IncidentStatus
 from app.repositories.incident import incident_repo
 from app.schemas.event import IncidentCreatedPayload, IncidentUpdatedPayload
+from app.agents.implementations.incident_analysis import IncidentAnalysisAgent
+from app.agents.types import AgentRequest
+from app.core.llm_client import LLMClient
 from app.schemas.incident import IncidentCreate, IncidentUpdate
 from app.services.event_bus import EventBus
 
@@ -18,8 +21,9 @@ class IncidentService:
     and side-effects (publishing to the Event Bus).
     """
 
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus, llm_client: LLMClient):
         self.event_bus = event_bus
+        self.llm_client = llm_client
 
     async def get_incident(self, db: AsyncSession, incident_id: uuid.UUID) -> Incident | None:
         return await incident_repo.get(db=db, id=incident_id)
@@ -41,6 +45,32 @@ class IncidentService:
         """Create a new incident and publish the incident.created event."""
         # 1. Persist to DB
         db_obj = await incident_repo.create(db=db, obj_in=incident_in.model_dump())
+        
+        # 1.5 Analyze with LLM Agent
+        try:
+            agent = IncidentAnalysisAgent(llm_client=self.llm_client)
+            req = AgentRequest(
+                task_type="incident_analysis",
+                input_data={"raw_text": db_obj.raw_text}
+            )
+            result = await agent.execute(req)
+            
+            if result.status == "succeeded" and result.output:
+                severity_str = result.output.data.get("severity", "medium").upper()
+                try:
+                    db_obj.severity = IncidentSeverity[severity_str]
+                except KeyError:
+                    db_obj.severity = IncidentSeverity.MEDIUM
+                    
+                db_obj.structured_summary = result.output.data
+                
+                # Save the updates
+                db.add(db_obj)
+                await db.commit()
+                await db.refresh(db_obj)
+        except Exception as e:
+            import logging
+            logging.error(f"IncidentAnalysisAgent failed: {e}")
         
         # 2. Construct Domain Event Payload
         payload = IncidentCreatedPayload(

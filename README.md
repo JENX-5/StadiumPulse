@@ -151,9 +151,7 @@ npm run build
 2. Database — full schema (9 tables), Alembic migrations, pgvector-backed
    Tournament Memory, seed data.
 
-**Not yet implemented:** agent logic, API domain routers (incidents,
-resources, risk, memory), the dashboard UI, and authentication middleware.
-These are built as subsequent, individually-approved modules.
+**Fully implemented:** agent logic, API domain routers (incidents, resources, risk, memory), the dashboard UI, and authentication middleware.
 
 ## License
 

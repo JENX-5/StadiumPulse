@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     # Framework's provider-abstraction requirement; agents never import a
     # concrete client, only `app.core.llm_client.LLMClient`.
     llm_provider: Literal["anthropic", "openai", "gemini"] = Field(
-        default="anthropic", alias="LLM_PROVIDER"
+        default="gemini", alias="LLM_PROVIDER"
     )
     llm_max_retries: int = Field(default=1, alias="LLM_MAX_RETRIES")
     llm_timeout_seconds: float = Field(default=20.0, alias="LLM_TIMEOUT_SECONDS")
@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     gemini_model_default: str = Field(default="gemini-2.0-flash", alias="GEMINI_MODEL_DEFAULT")
 
     # --- Auth ------------------------------------------------------------------
-    jwt_secret: str = Field(default="change_me", alias="JWT_SECRET")
+    jwt_secret: str = Field(..., alias="JWT_SECRET")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     jwt_expire_minutes: int = Field(default=1440, alias="JWT_EXPIRE_MINUTES")
 

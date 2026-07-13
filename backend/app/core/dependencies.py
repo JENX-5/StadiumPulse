@@ -65,5 +65,8 @@ def get_simulation_engine(container: Annotated[Container, Depends(get_container)
     return container.simulation_engine
 
 
-def get_incident_service(event_bus: Annotated[EventBus, Depends(get_event_bus)]) -> IncidentService:
-    return IncidentService(event_bus=event_bus)
+def get_incident_service(
+    event_bus: Annotated[EventBus, Depends(get_event_bus)],
+    llm_client: Annotated[LLMClient, Depends(get_llm_client)],
+) -> IncidentService:
+    return IncidentService(event_bus=event_bus, llm_client=llm_client)

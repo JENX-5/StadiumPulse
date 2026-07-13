@@ -47,6 +47,10 @@ export function connectWebSocket() {
       // Handle specific operational state updates
       if (parsedEvent.event_type === "simulation.tick" || parsedEvent.event_type === "state.updated") {
         store.updateLiveState(parsedEvent.payload);
+        // Feed the risk trajectory sparkline
+        if (parsedEvent.payload?.global_crowd_density != null) {
+          store.pushRiskScore(parsedEvent.payload.global_crowd_density);
+        }
       }
       
     } catch (e) {

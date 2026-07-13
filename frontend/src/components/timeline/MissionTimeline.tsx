@@ -23,7 +23,7 @@ export function MissionTimeline() {
   };
 
   return (
-    <div className="h-48 w-full bg-[#0a0a0a] border-t border-border/40 flex flex-col relative overflow-hidden">
+    <div className="h-48 w-full bg-card border-t border-border/40 flex flex-col relative overflow-hidden">
       {/* Console Header */}
       <div className="h-8 border-b border-border/20 bg-muted/10 flex items-center px-4 gap-2 shrink-0">
         <Terminal className="h-3.5 w-3.5 text-muted-foreground" />
@@ -66,7 +66,7 @@ export function MissionTimeline() {
       </ScrollArea>
       
       {/* Decorative gradient mask for smooth scrolling at top */}
-      <div className="absolute top-8 left-0 right-0 h-8 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+      <div className="absolute top-8 left-0 right-0 h-8 bg-gradient-to-b from-card to-transparent pointer-events-none" />
     </div>
   );
 }

@@ -46,9 +46,17 @@ export function SimulationControlPanel() {
     queryFn: () => zonesApi.list(venueId),
   });
 
+  const [controlError, setControlError] = useState<string | null>(null);
+
   const controlMutation = useMutation({
     mutationFn: simulationApi.control,
-    onSuccess: (data) => queryClient.setQueryData(["simulation-status"], data),
+    onSuccess: (data) => {
+      setControlError(null);
+      queryClient.setQueryData(["simulation-status"], data);
+    },
+    onError: (err) => {
+      setControlError(err instanceof ApiError ? err.message : "Simulation control failed.");
+    },
   });
 
   const injectMutation = useMutation({
@@ -219,6 +227,10 @@ export function SimulationControlPanel() {
                   })}`
                 : "No ticks received yet."}
             </div>
+
+            {controlError && (
+              <p className="text-[11px] text-destructive font-medium mt-1">{controlError}</p>
+            )}
           </TabsContent>
 
           <TabsContent value="inject" className="pt-3 flex flex-col gap-2.5">

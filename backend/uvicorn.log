@@ -53,3 +53,8 @@ WHERE users.id = $1::UUID
 2026-07-13 01:48:05,727 INFO sqlalchemy.engine.Engine COMMIT
 COMMIT
 INFO:     127.0.0.1:50211 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52899 - "GET /docs HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52899 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53320 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53671 - "GET /docs HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53671 - "GET /favicon.ico HTTP/1.1" 404 Not Found

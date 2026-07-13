@@ -9,7 +9,7 @@ import { RiskHeatmap, ZONE_CENTERS } from "../heatmap/RiskHeatmap";
 export function StadiumMap() {
   const { liveState, venueId } = useAppStore();
 
-  const { data: zones = [] } = useQuery({
+  const { data: zones = [], isLoading: zonesLoading, isError: zonesError } = useQuery({
     queryKey: ["zones", venueId],
     queryFn: () => venueId ? zonesApi.list(venueId) : Promise.resolve([]),
     enabled: !!venueId,
@@ -47,11 +47,23 @@ export function StadiumMap() {
       <div 
         className="absolute inset-0 opacity-[0.04]" 
         style={{ 
-          backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", 
+          backgroundImage: "radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)", 
           backgroundSize: "32px 32px" 
         }}
       />
-      
+
+      {zonesLoading ? (
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <span className="text-xs uppercase tracking-wider">Loading map data…</span>
+        </div>
+      ) : zonesError ? (
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <span className="text-sm">Failed to load map data.</span>
+          <span className="text-xs">Check that the backend is running.</span>
+        </div>
+      ) : (
+      <>
       <RiskHeatmap />
       
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
@@ -137,6 +149,8 @@ export function StadiumMap() {
           {liveState ? "LIVE DATA SYNCED" : "AWAITING TELEMETRY..."}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

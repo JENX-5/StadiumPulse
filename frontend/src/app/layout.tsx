@@ -8,8 +8,15 @@ import { ThemeProvider } from "@/components/theme-provider";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "StadiumPulse",
-  description: "Multi-agent stadium operations platform.",
+  title: "StadiumPulse — Mission Control",
+  description: "Real-time multi-agent stadium operations platform. Monitor crowd density, manage incidents, dispatch resources, and leverage AI-powered predictive insights.",
+  keywords: ["stadium", "operations", "crowd management", "incident response", "AI", "real-time"],
+  authors: [{ name: "StadiumPulse Team" }],
+  openGraph: {
+    title: "StadiumPulse — Mission Control",
+    description: "Real-time multi-agent stadium operations platform.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
