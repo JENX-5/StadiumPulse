@@ -1,47 +1,35 @@
+databases:
+  - name: stadiumpulse-db
+    databaseName: stadiumpulse
+    user: stadiumpulse
+    plan: free
+
 services:
-  # 1. Database (Private Service with pgvector)
-  - type: pserv
-    name: stadiumpulse-db
-    env: docker
-    dockerfilePath: ./Dockerfile.db
-    disk:
-      name: stadiumpulse-db-data
-      mountPath: /var/lib/postgresql/data
-      sizeGB: 1
-    envVars:
-      - key: POSTGRES_USER
-        value: stadiumpulse
-      - key: POSTGRES_PASSWORD
-        value: render_internal_pass_123
-      - key: POSTGRES_DB
-        value: stadiumpulse
-
-  # 2. Redis (Private Service)
-  - type: pserv
+  # 1. Redis
+  - type: redis
     name: stadiumpulse-redis
-    env: docker
-    dockerfilePath: ./Dockerfile.redis
-    disk:
-      name: stadiumpulse-redis-data
-      mountPath: /data
-      sizeGB: 1
+    plan: free
+    ipAllowList: []
 
-  # 3. Backend (Web Service)
+  # 2. Backend (Web Service)
   - type: web
     name: stadiumpulse-backend
     env: docker
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
+    plan: free
     envVars:
-      # Database connection (internal private service)
       - key: DATABASE_URL
-        value: postgresql+asyncpg://stadiumpulse:render_internal_pass_123@stadiumpulse-db:5432/stadiumpulse
+        fromDatabase:
+          name: stadiumpulse-db
+          property: connectionString
       
-      # Redis connection constructed from the Redis service
       - key: REDIS_URL
-        value: redis://stadiumpulse-redis:6379/0
+        fromService:
+          type: redis
+          name: stadiumpulse-redis
+          property: connectionString
 
-      # Set these manually in the Render Dashboard after deployment
       - key: GEMINI_API_KEY
         sync: false
       - key: JWT_SECRET
@@ -50,17 +38,16 @@ services:
       - key: API_V1_PREFIX
         value: /api/v1
       - key: CORS_ORIGINS
-        # Allow frontend to connect to backend
-        value: "*" # Update this to your frontend URL once deployed for stricter security
+        value: "*"
 
-  # 4. Frontend (Web Service)
+  # 3. Frontend (Web Service)
   - type: web
     name: stadiumpulse-frontend
     env: docker
     dockerContext: ./frontend
     dockerfilePath: ./frontend/Dockerfile
+    plan: free
     envVars:
-      # The frontend needs the backend's external URL at build time
       - key: NEXT_PUBLIC_API_URL
         value: "https://stadiumpulse-backend.onrender.com/api/v1"
       - key: NEXT_PUBLIC_WS_URL
