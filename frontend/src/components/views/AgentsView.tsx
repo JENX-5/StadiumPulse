@@ -59,7 +59,7 @@ export function AgentsView() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">AI Agents</h1>
         <Badge className="bg-muted text-foreground border-border">
-          {AI_AGENTS.filter((a) => a.status === "active").length}/{AI_AGENTS.length} Active
+          {AI_AGENTS.filter((a) => a.status.toLowerCase() === "active").length}/{AI_AGENTS.length} Active
         </Badge>
       </div>
 
@@ -86,13 +86,13 @@ export function AgentsView() {
               <Badge
                 variant="outline"
                 className={`text-[9px] uppercase tracking-wider rounded-sm px-1.5 ${
-                  agent.status === "active"
+                  agent.status.toLowerCase() === "active"
                     ? "bg-muted text-foreground border-border"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
                 <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1.5 ${
-                  agent.status === "active" ? "bg-foreground animate-pulse" : "bg-muted-foreground"
+                  agent.status.toLowerCase() === "active" ? "bg-foreground animate-pulse" : "bg-muted-foreground"
                 }`} />
                 {agent.status}
               </Badge>

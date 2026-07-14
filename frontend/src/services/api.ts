@@ -1,6 +1,6 @@
 import { apiRequest } from "@/lib/api-client";
 import { 
-  IncidentCreate, IncidentResponse, OperationalState, SimulationControl, SimulationStatusResponse,
+  IncidentCreate, IncidentResponse, IncidentUpdate, OperationalState, SimulationControl, SimulationStatusResponse,
   Resource, TournamentMemory, ZoneResponse, ZoneRiskResponse 
 } from "@/types/api";
 import { AuthUser } from "@/store/useAuthStore";
@@ -34,6 +34,12 @@ export const incidentsApi = {
   create: (payload: IncidentCreate) =>
     apiRequest<IncidentResponse>("/incidents/", {
       method: "POST",
+      body: payload,
+    }),
+    
+  update: (incidentId: string, payload: IncidentUpdate) =>
+    apiRequest<IncidentResponse>(`/incidents/${incidentId}`, {
+      method: "PATCH",
       body: payload,
     }),
 };

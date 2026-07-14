@@ -77,7 +77,6 @@ function OperationalHealthCard() {
   const { data: simulationStatus } = useQuery({
     queryKey: ["simulation-status"],
     queryFn: () => simulationApi.getStatus(),
-    refetchInterval: 4000,
   });
 
   const activeIncidents = liveState?.active_incidents ?? 0;

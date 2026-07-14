@@ -18,7 +18,6 @@ export function ResourcesView() {
     queryKey: ["resources", venueId],
     queryFn: () => resourcesApi.list(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const { data: zones = [] } = useQuery({
@@ -30,12 +29,12 @@ export function ResourcesView() {
   const zoneMap = new Map(zones.map((z) => [z.id, z.name]));
 
   const filtered = resources.filter((r) => {
-    if (filter !== "all" && r.status !== filter) return false;
+    if (filter !== "all" && r.status.toLowerCase() !== filter) return false;
     return true;
   });
 
   const getTypeIcon = (type: string) => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case "medical": return <HeartPulse className="h-4 w-4 text-foreground" />;
       case "security": return <ShieldAlert className="h-4 w-4 text-foreground" />;
       case "maintenance":
@@ -46,7 +45,7 @@ export function ResourcesView() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "available": return "bg-muted text-foreground border-border";
       case "assigned":
       case "busy": return "bg-muted/70 text-muted-foreground border-border";
@@ -57,9 +56,9 @@ export function ResourcesView() {
 
   const stats = {
     total: resources.length,
-    available: resources.filter((r) => r.status === "available").length,
-    assigned: resources.filter((r) => r.status === "assigned" || r.status === "busy").length,
-    offline: resources.filter((r) => r.status === "offline").length,
+    available: resources.filter((r) => r.status.toLowerCase() === "available").length,
+    assigned: resources.filter((r) => r.status.toLowerCase() === "assigned" || r.status.toLowerCase() === "busy").length,
+    offline: resources.filter((r) => r.status.toLowerCase() === "offline").length,
   };
 
   return (

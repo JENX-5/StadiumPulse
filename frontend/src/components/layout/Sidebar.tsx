@@ -32,19 +32,17 @@ export function Sidebar() {
     queryKey: ["sidebar-incidents", venueId],
     queryFn: () => incidentsApi.listByVenue(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const { data: resources = [] } = useQuery({
     queryKey: ["sidebar-resources", venueId],
     queryFn: () => resourcesApi.list(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
-  const activeIncidents = incidents.filter((incident) => incident.status === "OPEN" || incident.status === "IN_PROGRESS").length;
-  const alerts = timelineEvents.filter((event) => event.type.includes("incident") || event.type.includes("alert")).length;
-  const availableResources = resources.filter((resource) => resource.status === "available").length;
+  const activeIncidents = incidents.filter((incident) => incident.status.toLowerCase() === "open" || incident.status.toLowerCase() === "in_progress").length;
+  const alerts = timelineEvents.filter((event) => (event.type || "").toLowerCase().includes("incident") || (event.type || "").toLowerCase().includes("alert")).length;
+  const availableResources = resources.filter((resource) => resource.status.toLowerCase() === "available").length;
 
   return (
     <aside

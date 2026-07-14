@@ -82,14 +82,12 @@ export function StadiumMap() {
     queryKey: ["incidents", venueId],
     queryFn: () => (venueId ? incidentsApi.listByVenue(venueId) : Promise.resolve([])),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const { data: resources = [] } = useQuery({
     queryKey: ["resources", venueId],
     queryFn: () => (venueId ? resourcesApi.list(venueId) : Promise.resolve([])),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const zoneIdToCenter = useMemo(() => {
@@ -101,7 +99,7 @@ export function StadiumMap() {
     return map;
   }, [zones]);
 
-  const activeIncidents = incidents.filter((incident) => incident.status !== "RESOLVED" && incident.status !== "CLOSED");
+  const activeIncidents = incidents.filter((incident) => incident.status !== "resolved" && incident.status !== "closed");
 
   const highestPressureZone = useMemo(() => {
     const riskByZone = new Map<string, number>();

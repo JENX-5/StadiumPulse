@@ -5,8 +5,13 @@ let ws: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
 let pingTimer: NodeJS.Timeout | null = null;
 let shouldReconnect = true;
+let queryClientInstance: any = null;
 
-export function connectWebSocket() {
+export function connectWebSocket(queryClient?: any) {
+  if (queryClient) {
+    queryClientInstance = queryClient;
+  }
+
   if (typeof window === "undefined") return; // Only run on client
 
   if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
@@ -53,6 +58,14 @@ export function connectWebSocket() {
         if (parsedEvent.payload?.global_crowd_density != null) {
           store.pushRiskScore(parsedEvent.payload.global_crowd_density);
         }
+      }
+
+      // Invalidate queries so that UI fetches fresh data without polling
+      if (queryClientInstance) {
+        queryClientInstance.invalidateQueries({ queryKey: ["incidents"] });
+        queryClientInstance.invalidateQueries({ queryKey: ["resources"] });
+        queryClientInstance.invalidateQueries({ queryKey: ["metrics"] });
+        queryClientInstance.invalidateQueries({ queryKey: ["simulation-status"] });
       }
       
     } catch (e) {

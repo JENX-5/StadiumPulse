@@ -14,19 +14,21 @@ export function TimelineView() {
 
   const filtered = timelineEvents.filter((e) => {
     if (filter === "all") return true;
-    return e.type.includes(filter);
+    return (e.type || "").toLowerCase().includes(filter);
   });
 
   const getEventIcon = (type: string) => {
-    if (type.includes("incident")) return <AlertCircle className="h-4 w-4 text-destructive" />;
-    if (type.includes("agent") || type.includes("simulation")) return <Bot className="h-4 w-4 text-primary" />;
+    const t = (type || "").toLowerCase();
+    if (t.includes("incident")) return <AlertCircle className="h-4 w-4 text-destructive" />;
+    if (t.includes("agent") || t.includes("simulation")) return <Bot className="h-4 w-4 text-primary" />;
     return <Activity className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getEventColor = (type: string) => {
-    if (type.includes("incident")) return "border-l-destructive";
-    if (type.includes("agent")) return "border-l-primary";
-    if (type.includes("simulation")) return "border-l-amber-500";
+    const t = (type || "").toLowerCase();
+    if (t.includes("incident")) return "border-l-destructive";
+    if (t.includes("agent")) return "border-l-primary";
+    if (t.includes("simulation")) return "border-l-amber-500";
     return "border-l-muted-foreground";
   };
 

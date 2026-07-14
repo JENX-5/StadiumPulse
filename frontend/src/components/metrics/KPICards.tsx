@@ -100,25 +100,23 @@ export function KPICards() {
     queryKey: ["incidents", venueId],
     queryFn: () => incidentsApi.listByVenue(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const { data: resources = [] } = useQuery({
     queryKey: ["resources", venueId],
     queryFn: () => resourcesApi.list(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const density = liveState?.global_crowd_density ?? 0.15;
-  const activeIncidents = incidents.filter((incident) => incident.status === "OPEN" || incident.status === "IN_PROGRESS").length;
+  const activeIncidents = incidents.filter((incident) => incident.status === "open" || incident.status === "in_progress").length;
   const availableResources = resources.filter((resource) => resource.status === "available").length;
   const totalResources = resources.length;
 
   const avgResponseMs =
     activeIncidents > 0
       ? incidents
-          .filter((incident) => incident.status === "OPEN" || incident.status === "IN_PROGRESS")
+          .filter((incident) => incident.status === "open" || incident.status === "in_progress")
           .reduce((sum, incident) => sum + (Date.now() - new Date(incident.created_at).getTime()), 0) / activeIncidents
       : 0;
 
@@ -148,7 +146,7 @@ export function KPICards() {
 
   const responseSpark = useMemo(() => {
     const responseValues = incidents
-      .filter((incident) => incident.status === "OPEN" || incident.status === "IN_PROGRESS")
+      .filter((incident) => incident.status === "open" || incident.status === "in_progress")
       .map((incident) => Math.max((Date.now() - new Date(incident.created_at).getTime()) / 60000, 0));
     return buildSeries(responseValues, avgMinutes || 1, 8);
   }, [avgMinutes, incidents]);

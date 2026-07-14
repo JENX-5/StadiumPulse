@@ -38,7 +38,6 @@ export function SimulationControlPanel() {
     // Playback state can change from outside this panel (another tab, a
     // teammate, a restart) — light polling keeps the badge/buttons honest
     // without needing a dedicated WS message for engine state itself.
-    refetchInterval: 4000,
   });
 
   const { data: zones = [] } = useQuery({

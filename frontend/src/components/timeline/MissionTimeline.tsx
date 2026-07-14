@@ -12,9 +12,10 @@ import { TimelineEvent, useAppStore } from "@/store/useAppStore";
 type FilterValue = "all" | "incident" | "agent" | "simulation" | "system";
 
 function getCategory(type: string): FilterValue {
-  if (type.includes("incident")) return "incident";
-  if (type.includes("agent")) return "agent";
-  if (type.includes("simulation")) return "simulation";
+  const t = (type || "").toLowerCase();
+  if (t.includes("incident")) return "incident";
+  if (t.includes("agent")) return "agent";
+  if (t.includes("simulation")) return "simulation";
   return "system";
 }
 
@@ -38,15 +39,17 @@ export function MissionTimeline() {
   );
 
   const getEventIcon = (type: string) => {
-    if (type.includes("incident")) return <AlertCircle className="h-3.5 w-3.5 text-foreground" />;
-    if (type.includes("agent") || type.includes("simulation")) return <Bot className="h-3.5 w-3.5 text-foreground" />;
+    const t = (type || "").toLowerCase();
+    if (t.includes("incident")) return <AlertCircle className="h-3.5 w-3.5 text-foreground" />;
+    if (t.includes("agent") || t.includes("simulation")) return <Bot className="h-3.5 w-3.5 text-foreground" />;
     return <Activity className="h-3.5 w-3.5 text-muted-foreground" />;
   };
 
   const getBadgeTone = (type: string) => {
-    if (type.includes("incident")) return "border-border/60 bg-background text-foreground";
-    if (type.includes("agent")) return "border-border/60 bg-muted text-foreground";
-    if (type.includes("simulation")) return "border-border/60 bg-muted/70 text-muted-foreground";
+    const t = (type || "").toLowerCase();
+    if (t.includes("incident")) return "border-border/60 bg-background text-foreground";
+    if (t.includes("agent")) return "border-border/60 bg-muted text-foreground";
+    if (t.includes("simulation")) return "border-border/60 bg-muted/70 text-muted-foreground";
     return "border-border/60 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
   };
 

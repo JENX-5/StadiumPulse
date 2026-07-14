@@ -22,11 +22,13 @@ import { TimelineView } from "@/components/views/TimelineView";
 import { stateApi } from "@/services/api";
 import { connectWebSocket, disconnectWebSocket } from "@/services/websocket";
 import { useAppStore } from "@/store/useAppStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
   const venueId = useAppStore((state) => state.venueId);
   const activeView = useAppStore((state) => state.activeView);
   const updateLiveState = useAppStore((state) => state.updateLiveState);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     stateApi
@@ -36,12 +38,12 @@ export default function Home() {
       })
       .catch((err) => console.warn("Failed to fetch initial state:", err));
 
-    connectWebSocket();
+    connectWebSocket(queryClient);
 
     return () => {
       disconnectWebSocket();
     };
-  }, [venueId, updateLiveState]);
+  }, [venueId, updateLiveState, queryClient]);
 
   const renderContent = () => {
     switch (activeView) {

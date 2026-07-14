@@ -12,11 +12,11 @@
 
 <br />
 
-> **The ultimate hackathon submission combining real-time deterministic event streams with a 5-agent Google Gemini negotiation layer.**
+> **The ultimate command center combining real-time deterministic event streams with a 5-agent Google Gemini negotiation layer.**
 
 ## 📑 Table of Contents
 - [🏆 The Problem](#-the-problem)
-- [💡 Our Solution](#-our-solution)
+- [💡 The Solution](#-the-solution)
 - [🤖 Multi-Agent Gen AI (Powered by Gemini)](#-multi-agent-gen-ai-powered-by-gemini)
 - [✨ Core Features](#-core-features)
 - [🏗 Architecture & Design](#-architecture--design)
@@ -30,19 +30,19 @@
 ## 🏆 The Problem
 Managing a massive 80,000-seat stadium event is chaos. Dispatchers face **severe cognitive overload** attempting to orchestrate security, medical, and maintenance teams during rapidly evolving incidents. Traditional dashboards are passive; they only show what went wrong, leaving humans to figure out *who* to send and *how* to resolve it.
 
-## 💡 Our Solution
+## 💡 The Solution
 **StadiumPulse** transforms the passive dashboard into an **active, autonomous AI assistant**. 
 
-Instead of wrapping a single LLM prompt, we built a complex **Multi-Agent Orchestration Engine powered by Google Gemini**. When an incident occurs, five specialized agents analyze the situation, pre-filter available resources via deterministic SQL queries (to save AI tokens and latency), and then literally *debate* the best response. Human operators monitor the live AI negotiation on a stunning real-time dashboard and approve the final consensus.
+Instead of wrapping a single LLM prompt, StadiumPulse utilizes a complex **Multi-Agent Orchestration Engine powered by Google Gemini**. When an incident occurs, five specialized agents analyze the situation, pre-filter available resources via deterministic SQL queries (to save AI tokens and latency), and then literally *debate* the best response. Human operators monitor the live AI negotiation on a stunning real-time dashboard and approve the final consensus.
 
 <div align="center">
-  <em>(Replace this line with your actual UI Demo GIF showing the live incident timeline)</em>
+  <img src="public/demo.png" alt="StadiumPulse Live Dashboard Demo" width="800" />
 </div>
 
 ---
 
 ## 🤖 Multi-Agent Gen AI (Powered by Gemini)
-We deeply fulfill the Gen AI requirement by utilizing **Google Gemini 1.5 Flash** via the brand new `google-genai` SDK across five distinct agent personas. The AI is highly meaningful, directly controlling the resource coordination logic and utilizing Gemini's native structured JSON responses for ultimate reliability.
+StadiumPulse deeply integrates Gen AI by utilizing **Google Gemini 1.5 Flash** via the brand new `google-genai` SDK across five distinct agent personas. The AI is highly meaningful, directly controlling the resource coordination logic and utilizing Gemini's native structured JSON responses for ultimate reliability.
 
 1. 🧠 **Predictive Intelligence Agent:** Constantly evaluates stadium risk scores and generates predictive threat narratives.
 2. 🚨 **Incident Analysis Agent:** Instantly classifies, triages, and prioritizes raw chaotic incident reports.
@@ -88,7 +88,7 @@ flowchart TB
     OCA -- "Resolved" --> TMA
 ```
 
-*For an in-depth look at our engineering choices, please read our [Architecture Decision Records (ADRs)](./docs/decisions/).*
+*For an in-depth look at the engineering choices, please read the [Architecture Decision Records (ADRs)](./docs/decisions/).*
 
 ---
 
@@ -111,7 +111,7 @@ You can spin up the entire multi-agent platform, database, and frontend locally 
 
 1. **Clone & Configure:**
    ```bash
-   git clone https://github.com/yourusername/stadiumpulse.git
+   git clone https://github.com/JENX-5/StadiumPulse.git
    cd stadiumpulse
    cp .env.example .env
    # Open .env and add your GEMINI_API_KEY
@@ -128,9 +128,27 @@ You can spin up the entire multi-agent platform, database, and frontend locally 
 
 ---
 
+## 🎮 How to Use the Simulation
+
+Once the application is running, you can interact with the dashboard to inject incidents and watch the multi-agent system resolve them in real-time.
+
+1. **Open the Mission Control Dashboard:** Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+2. **Access the Simulation Panel:** On the right side of the dashboard, click on the **AI & Sim** tab.
+3. **Inject an Incident:** 
+   - Scroll down to the **Inject Incident** section.
+   - Select a **Zone** from the dropdown (e.g., Sector 102, West Concourse).
+   - Enter a **Description** of the event (e.g., "Medical emergency in Sector 102" or "Suspicious package near Gate A").
+   - Click **Inject Incident**.
+4. **Watch the AI Negotiation:** The newly injected incident will appear on the live timeline on the left. The system will automatically trigger the agents (Incident Analysis, Resource Coordination, and Operational Consensus) to analyze the threat, debate, and dispatch resources.
+5. **Verify the Resolution:** Observe the assigned resources and the final operational consensus reached by the AI in the incident details.
+
+*Alternatively, you can programmatically inject incidents via the Swagger UI by sending a `POST` request to the `/api/v1/incidents/` endpoint.*
+
+---
+
 ## 🧪 Testing
 
-We believe hackathon projects should be robust. The repository is heavily tested.
+StadiumPulse is built to be robust and is heavily tested.
 
 **Backend (69+ Pytest Unit Tests):**
 ```bash
@@ -156,5 +174,5 @@ npm run test
 ---
 
 <div align="center">
-  <b>Built with ❤️ for the Hackathon by Your Name</b>
+  <b>Built with ❤️ by JenX</b>
 </div>

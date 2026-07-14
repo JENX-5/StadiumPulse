@@ -25,7 +25,6 @@ export function RiskHeatmap() {
     queryKey: ["risk-heatmap", venueId],
     queryFn: () => riskApi.getHeatmap(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   return (

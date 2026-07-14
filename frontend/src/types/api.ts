@@ -75,3 +75,8 @@ export interface IncidentCreate {
   severity: "critical" | "high" | "medium" | "low";
   source?: "simulation" | "live";
 }
+
+export interface IncidentUpdate {
+  status?: "open" | "in_progress" | "resolved" | "closed";
+  severity?: "critical" | "high" | "medium" | "low";
+}

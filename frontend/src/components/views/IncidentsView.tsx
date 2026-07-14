@@ -7,25 +7,36 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { incidentsApi } from "@/services/api";
+import { IncidentResponse } from "@/types/api";
 import { useAppStore } from "@/store/useAppStore";
 
 export function IncidentsView() {
   const { venueId } = useAppStore();
   const [filter, setFilter] = useState<"all" | "open" | "resolved">("all");
   const [search, setSearch] = useState("");
+  const [selectedIncident, setSelectedIncident] = useState<IncidentResponse | null>(null);
+  const queryClient = useQueryClient();
+
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) => incidentsApi.update(id, { status: "resolved" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidents", venueId] });
+      setSelectedIncident(null);
+    }
+  });
 
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ["incidents", venueId],
     queryFn: () => incidentsApi.listByVenue(venueId),
     enabled: !!venueId,
-    refetchInterval: 5000,
   });
 
   const filtered = incidents.filter((i) => {
-    if (filter === "open" && (i.status === "RESOLVED" || i.status === "CLOSED")) return false;
-    if (filter === "resolved" && i.status !== "RESOLVED" && i.status !== "CLOSED") return false;
+    if (filter === "open" && (i.status === "resolved" || i.status === "closed")) return false;
+    if (filter === "resolved" && i.status !== "resolved" && i.status !== "closed") return false;
     if (search && !i.raw_text.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -40,8 +51,8 @@ export function IncidentsView() {
   };
 
   const getStatusIcon = (status: string) => {
-    if (status === "RESOLVED" || status === "CLOSED") return <CheckCircle2 className="h-4 w-4 text-foreground" />;
-    if (status === "IN_PROGRESS") return <Clock className="h-4 w-4 text-muted-foreground" />;
+    if (status === "resolved" || status === "closed") return <CheckCircle2 className="h-4 w-4 text-foreground" />;
+    if (status === "in_progress") return <Clock className="h-4 w-4 text-muted-foreground" />;
     return <AlertCircle className="h-4 w-4 text-destructive" />;
   };
 
@@ -50,7 +61,7 @@ export function IncidentsView() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Incidents</h1>
             <Badge variant="secondary" className="text-xs bg-muted text-foreground border-border">
-          {incidents.filter((i) => i.status === "OPEN" || i.status === "IN_PROGRESS").length} Active
+          {incidents.filter((i) => i.status === "open" || i.status === "in_progress").length} Active
         </Badge>
       </div>
 
@@ -102,6 +113,7 @@ export function IncidentsView() {
               <Card
                 key={incident.id}
                 className="bg-card/50 border-border/40 hover:bg-card/80 transition-all cursor-pointer group"
+                onClick={() => setSelectedIncident(incident)}
               >
                 <div className="p-4">
                   <div className="flex items-start gap-3">
@@ -138,6 +150,43 @@ export function IncidentsView() {
           </div>
         )}
       </ScrollArea>
+
+      <Dialog open={!!selectedIncident} onOpenChange={(open) => !open && setSelectedIncident(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Incident Details</DialogTitle>
+          </DialogHeader>
+          {selectedIncident && (
+            <div className="space-y-4 pt-4">
+              <div className="text-sm font-medium">
+                {selectedIncident.raw_text}
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="outline" className={`text-xs uppercase tracking-wider ${getSeverityColor(selectedIncident.severity)}`}>
+                  {selectedIncident.severity.toUpperCase()}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {selectedIncident.status.replace("_", " ")}
+                </Badge>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Created: {new Date(selectedIncident.created_at).toLocaleString()}
+                <br />
+                Source: <span className="uppercase">{selectedIncident.source}</span>
+              </div>
+              
+              <div className="flex justify-end pt-4">
+                <Button 
+                  onClick={() => resolveMutation.mutate(selectedIncident.id)}
+                  disabled={selectedIncident.status === "resolved" || selectedIncident.status === "closed" || resolveMutation.isPending}
+                >
+                  {resolveMutation.isPending ? "Resolving..." : "Resolve Incident"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
