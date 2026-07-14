@@ -224,7 +224,7 @@ export function StadiumMap() {
         </div>
       ) : (
         <motion.div
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center p-6 pt-16 pb-16 lg:pr-12"
           animate={{ scale: zoom }}
           transition={{ type: "spring", stiffness: 220, damping: 24 }}
           style={{ transformOrigin: "center center" }}

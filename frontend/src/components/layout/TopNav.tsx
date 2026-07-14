@@ -30,8 +30,11 @@ export function TopNav() {
   const notifRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
+  const [mounted, setMounted] = useState(false);
+
   // Close dropdowns on outside click
   useEffect(() => {
+    setMounted(true);
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     function handleClick(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
@@ -205,7 +208,7 @@ export function TopNav() {
       <div className="flex items-center gap-2 overflow-x-auto border-t border-border/50 px-4 py-2.5 lg:px-6">
         <Badge variant="outline" className="rounded-full border-border/60 bg-background/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           <Clock3 className="mr-1.5 h-3 w-3" />
-          {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          {mounted ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:--"}
         </Badge>
         <Badge variant="outline" className="rounded-full border-border/60 bg-background/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           <Wifi className="mr-1.5 h-3 w-3" />

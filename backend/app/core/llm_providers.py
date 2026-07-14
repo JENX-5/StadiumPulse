@@ -164,21 +164,26 @@ class GeminiLLMClient(LLMClient):
         model: str,
         max_tokens: int,
         temperature: float,
+        is_json: bool = False,
     ) -> str:
         from google.genai import types
 
         last_error: Exception | None = None
         for attempt in range(self._max_retries + 1):
             try:
+                config_kwargs = {
+                    "system_instruction": system_prompt,
+                    "max_output_tokens": max_tokens,
+                    "temperature": temperature,
+                }
+                if is_json:
+                    config_kwargs["response_mime_type"] = "application/json"
+                    
                 response = await asyncio.wait_for(
                     self._client.aio.models.generate_content(
                         model=model,
                         contents=user_prompt,
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_prompt,
-                            max_output_tokens=max_tokens,
-                            temperature=temperature,
-                        ),
+                        config=types.GenerateContentConfig(**config_kwargs),
                     ),
                     timeout=self._timeout,
                 )
@@ -229,6 +234,7 @@ class GeminiLLMClient(LLMClient):
             model=resolved_model,
             max_tokens=max_tokens,
             temperature=temperature,
+            is_json=True,
         )
         parsed = _try_parse_json(text)
         if parsed is not None:
@@ -242,6 +248,7 @@ class GeminiLLMClient(LLMClient):
             model=resolved_model,
             max_tokens=max_tokens,
             temperature=temperature,
+            is_json=True,
         )
         parsed = _try_parse_json(text)
         if parsed is not None:

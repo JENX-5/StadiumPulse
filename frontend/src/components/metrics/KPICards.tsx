@@ -159,7 +159,7 @@ export function KPICards() {
   const responseTrend = activeIncidents > 0 ? `+${avgMinutes}m ${avgSeconds}s avg` : "No open incidents";
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-1">
       <MetricCard
         label="Active Incidents"
         value={String(activeIncidents)}

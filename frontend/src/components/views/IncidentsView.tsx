@@ -84,7 +84,7 @@ export function IncidentsView() {
       </div>
 
       {/* Incident list */}
-      <ScrollArea className="flex-1 -mx-1">
+      <ScrollArea className="flex-1 -mx-1" aria-live="polite" aria-atomic="false">
         {isLoading ? (
           <div className="space-y-3 px-1">
             {[1, 2, 3, 4, 5].map((i) => (

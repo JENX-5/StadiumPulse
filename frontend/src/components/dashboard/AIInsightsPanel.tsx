@@ -31,8 +31,7 @@ function ConfidenceRing({ confidence }: { confidence: number }) {
         />
       </svg>
       <div className="relative text-center">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Confidence</div>
-        <div className="text-base font-semibold text-foreground">{confidence}%</div>
+        <div className="text-xl font-bold text-foreground">{confidence}%</div>
       </div>
     </div>
   );

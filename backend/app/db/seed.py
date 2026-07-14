@@ -52,7 +52,8 @@ async def seed() -> None:
     session_factory = create_session_factory(engine)
 
     async with session_scope(session_factory) as session:
-        venue = Venue(name="Riverside Arena", timezone="America/New_York")
+        import uuid
+        venue = Venue(id=uuid.UUID("11111111-1111-1111-1111-111111111111"), name="Riverside Arena", timezone="America/New_York")
         session.add(venue)
         await session.flush()  # populate venue.id before FK references below
 

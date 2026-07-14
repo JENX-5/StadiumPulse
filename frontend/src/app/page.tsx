@@ -24,7 +24,9 @@ import { connectWebSocket, disconnectWebSocket } from "@/services/websocket";
 import { useAppStore } from "@/store/useAppStore";
 
 export default function Home() {
-  const { venueId, activeView, updateLiveState } = useAppStore();
+  const venueId = useAppStore((state) => state.venueId);
+  const activeView = useAppStore((state) => state.activeView);
+  const updateLiveState = useAppStore((state) => state.updateLiveState);
 
   useEffect(() => {
     stateApi
@@ -59,7 +61,9 @@ export default function Home() {
 
   return (
     <DashboardLayout>
-      {renderContent()}
+      <main className="h-full w-full">
+        {renderContent()}
+      </main>
     </DashboardLayout>
   );
 }

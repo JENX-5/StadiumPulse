@@ -69,7 +69,7 @@ export const riskApi = {
 
 export const memoryApi = {
   list: (venueId: string) =>
-    apiRequest<TournamentMemory[]>(`/memory?venue_id=${venueId}`),
+    apiRequest<TournamentMemory[]>(`/memory/?venue_id=${venueId}`),
 };
 
 export const resourcesApi = {

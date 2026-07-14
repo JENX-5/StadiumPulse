@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     openai_model_default: str = Field(default="gpt-4o", alias="OPENAI_MODEL_DEFAULT")
 
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
-    gemini_model_default: str = Field(default="gemini-2.0-flash", alias="GEMINI_MODEL_DEFAULT")
+    gemini_model_default: str = Field(default="gemini-1.5-flash", alias="GEMINI_MODEL_DEFAULT")
 
     # --- Auth ------------------------------------------------------------------
     jwt_secret: str = Field(..., alias="JWT_SECRET")
@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = Field(default="/api/v1", alias="API_V1_PREFIX")
     cors_origins: str = Field(default="http://localhost:3000,http://localhost:3001", alias="CORS_ORIGINS")
 
-    @field_validator("anthropic_api_key")
+    @field_validator("gemini_api_key")
     @classmethod
     def warn_on_missing_llm_key(cls, value: str) -> str:
         # We do not raise here: health checks and non-agent endpoints must still

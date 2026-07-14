@@ -65,7 +65,7 @@ export function TimelineView() {
         ))}
       </div>
 
-      <ScrollArea className="flex-1 -mx-1">
+      <ScrollArea className="flex-1 -mx-1" aria-live="polite" aria-atomic="false">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Terminal className="h-8 w-8 mb-3 opacity-40" />

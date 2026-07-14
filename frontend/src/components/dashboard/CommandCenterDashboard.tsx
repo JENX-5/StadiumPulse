@@ -22,14 +22,17 @@ import { MissionTimeline } from "@/components/timeline/MissionTimeline";
 import { StadiumMap } from "@/components/map/StadiumMap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { simulationApi } from "@/services/api";
 import { useAppStore } from "@/store/useAppStore";
 import { SimulationControlPanel } from "@/components/simulation/SimulationControlPanel";
 
 function useLiveClock() {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
@@ -123,77 +126,123 @@ function OperationalHealthCard() {
   );
 }
 
+function ResizeHandle({ direction = "horizontal" }: { direction?: "horizontal" | "vertical" }) {
+  const isHorizontal = direction === "horizontal";
+  return (
+    <PanelResizeHandle
+      className={`
+        group relative flex items-center justify-center
+        ${isHorizontal ? "w-2 cursor-col-resize" : "h-2 cursor-row-resize"}
+        hover:bg-primary/10 active:bg-primary/20 transition-colors
+      `}
+    >
+      <div
+        className={`
+          rounded-full bg-border/60 group-hover:bg-primary/50 group-active:bg-primary transition-colors
+          ${isHorizontal ? "w-0.5 h-8" : "h-0.5 w-8"}
+        `}
+      />
+    </PanelResizeHandle>
+  );
+}
+
 export function CommandCenterDashboard() {
   const clock = useLiveClock();
   const { liveState, timelineEvents } = useAppStore();
   const recentAlerts = timelineEvents.filter((event) => event.type.includes("incident") || event.type.includes("alert")).slice(0, 3);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4 2xl:px-5 2xl:py-5">
+    <div className="flex h-full min-h-0 flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4 2xl:px-5 2xl:py-5 overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="grid gap-2 xl:grid-cols-6"
+        className="grid gap-2 shrink-0 xl:grid-cols-6"
       >
         <StatPill icon={Activity} label="Venue" value="Demo Stadium" tone="blue" />
-        <StatPill icon={Clock3} label="Live clock" value={clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })} tone="neutral" />
+        <StatPill icon={Clock3} label="Live clock" value={clock ? clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:--"} tone="neutral" />
         <StatPill icon={Wifi} label="Telemetry" value={liveState ? "Connected" : "Syncing"} tone={liveState ? "green" : "amber"} />
         <StatPill icon={Sparkles} label="AI engine" value={timelineEvents.some((event) => event.type.includes("agent")) ? "Predictive active" : "Standing by"} tone="blue" />
         <StatPill icon={Radio} label="System load" value={liveState ? `${Math.round((liveState.global_crowd_density ?? 0.15) * 100)}% crowd pressure` : "Awaiting data"} tone="amber" />
         <StatPill icon={AlertTriangle} label="Alert buffer" value={`${recentAlerts.length} recent`} tone={recentAlerts.length > 0 ? "red" : "green"} />
       </motion.div>
 
-      <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(320px,360px)_minmax(0,1fr)_minmax(320px,380px)]">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.05 }}
-          className="flex min-h-0 flex-col gap-3"
-        >
-          <KPICards />
-          <SimulationControlPanel />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.1 }}
-          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-white/90 shadow-sm backdrop-blur dark:bg-card/90"
-        >
-          <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Primary operations view</div>
-              <div className="text-sm font-medium text-foreground">Stadium crowd control, incident response, and resource dispatch</div>
-            </div>
-            <Badge variant="outline" className="rounded-full border-border/60 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.18em]">
-              Live command center
-            </Badge>
-          </div>
-          <div className="min-h-0 flex-1 p-3 lg:p-4">
-            <StadiumMap />
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.15 }}
-          className="flex min-h-0 flex-col gap-3"
-        >
-          <AIInsightsPanel />
-          <OperationalHealthCard />
-          <IncidentPanel />
-        </motion.div>
-      </div>
-
-      <motion.div
+      <motion.div 
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.2 }}
-        className="min-h-[280px] overflow-hidden rounded-2xl border border-border/60 bg-white/90 shadow-sm backdrop-blur dark:bg-card/90"
+        transition={{ duration: 0.35, delay: 0.05 }}
+        className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-border/60 shadow-sm bg-white/90 dark:bg-card/90 backdrop-blur"
       >
-        <MissionTimeline />
+        <PanelGroup direction="horizontal">
+          
+          {/* LEFT PANE: MAP & TIMELINE */}
+          <Panel defaultSize={65} minSize={30}>
+            <PanelGroup direction="vertical">
+              {/* MAP */}
+              <Panel defaultSize={65} minSize={30}>
+                <div className="flex h-full flex-col">
+                  <div className="flex items-center justify-between border-b border-border/50 px-4 py-3 shrink-0">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Primary operations view</div>
+                      <div className="text-sm font-medium text-foreground">Stadium crowd control, incident response, and resource dispatch</div>
+                    </div>
+                    <Badge variant="outline" className="rounded-full border-border/60 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.18em]">
+                      Live command center
+                    </Badge>
+                  </div>
+                  <div className="flex-1 min-h-0 p-3 lg:p-4 relative">
+                    <StadiumMap />
+                  </div>
+                </div>
+              </Panel>
+
+              <ResizeHandle direction="vertical" />
+
+              {/* TIMELINE */}
+              <Panel defaultSize={35} minSize={15}>
+                <div className="h-full border-t border-border/50">
+                  <MissionTimeline />
+                </div>
+              </Panel>
+            </PanelGroup>
+          </Panel>
+
+          <ResizeHandle direction="horizontal" />
+
+          {/* RIGHT PANE: TABS */}
+          <Panel defaultSize={35} minSize={25} maxSize={50}>
+            <div className="flex h-full flex-col bg-muted/10 border-l border-border/50">
+              <Tabs defaultValue="incidents" className="flex h-full flex-col min-h-0">
+                <div className="border-b border-border/50 px-4 py-3 shrink-0 bg-background/50 backdrop-blur sticky top-0 z-10">
+                  <TabsList className="w-full grid grid-cols-3">
+                    <TabsTrigger value="incidents">Incidents</TabsTrigger>
+                    <TabsTrigger value="simulation">AI & Sim</TabsTrigger>
+                    <TabsTrigger value="metrics">Metrics</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <div className="flex-1 min-h-0 flex flex-col p-4 overflow-y-auto">
+                  <TabsContent value="incidents" className="m-0 flex-1 flex flex-col gap-4 min-h-0">
+                    <div className="shrink-0"><OperationalHealthCard /></div>
+                    <div className="flex-1 min-h-[400px]">
+                      <IncidentPanel />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="simulation" className="m-0 flex flex-col gap-4">
+                    <AIInsightsPanel />
+                    <SimulationControlPanel />
+                  </TabsContent>
+
+                  <TabsContent value="metrics" className="m-0 flex flex-col gap-4">
+                    <KPICards />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
+          </Panel>
+
+        </PanelGroup>
       </motion.div>
     </div>
   );

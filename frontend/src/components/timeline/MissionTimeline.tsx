@@ -61,9 +61,9 @@ export function MissionTimeline() {
 
   return (
     <Card className="flex h-full flex-col overflow-hidden border-0 bg-transparent shadow-none">
-      <CardHeader className="border-b border-border/50 bg-background/70 px-4 py-3 backdrop-blur">
-        <div className="flex items-center justify-between gap-3">
-          <div className="space-y-1">
+      <CardHeader className="border-b border-border/50 bg-background/70 px-4 py-3 backdrop-blur shrink-0">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1 min-w-[200px] flex-1">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground">
               <Terminal className="h-4 w-4 text-foreground" />
               Live Operational Telemetry
@@ -71,7 +71,7 @@ export function MissionTimeline() {
             <div className="text-[11px] text-muted-foreground">Streaming camera, AI, crowd, and resource events in real time.</div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <div className="flex flex-wrap items-center justify-start sm:justify-end gap-1.5 shrink-0">
             {([
               { key: "all", label: "All", count: timelineEvents.length },
               { key: "incident", label: "Incidents", count: counts.incident },

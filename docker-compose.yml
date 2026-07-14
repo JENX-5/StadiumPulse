@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-stadiumpulse}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_local_env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?Variable not set}
       POSTGRES_DB: ${POSTGRES_DB:-stadiumpulse}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -47,7 +47,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://stadiumpulse:change_me_in_local_env@postgres:5432/stadiumpulse}
+      DATABASE_URL: ${DATABASE_URL?Variable not set}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     ports:
       - "${BACKEND_PORT:-8000}:8000"

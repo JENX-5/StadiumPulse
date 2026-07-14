@@ -15,6 +15,7 @@ data shape or any caller code — only `_run_stage`'s body would change.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 
 import structlog
@@ -110,16 +111,13 @@ class AgentOrchestrator:
     async def _run_stage(
         self, stage: list[WorkflowStep], context_manager: SharedContextManager, start_index: int
     ) -> list[TaskResult]:
-        """Sequential today; the seam for future parallel execution
-        (`asyncio.gather` over this stage's steps) — every step in a stage
-        already shares the same context snapshot, which is what makes them
-        safe to parallelize once that change is made."""
-        results: list[TaskResult] = []
-        for offset, step in enumerate(stage):
-            results.append(
-                await self._run_step(step, context_manager, step_index=start_index + offset)
-            )
-        return results
+        """Executes all steps in a stage concurrently.
+        Safe to parallelize because every step in a stage shares the same context snapshot."""
+        tasks = [
+            self._run_step(step, context_manager, step_index=start_index + offset)
+            for offset, step in enumerate(stage)
+        ]
+        return await asyncio.gather(*tasks)
 
     async def _run_step(
         self, step: WorkflowStep, context_manager: SharedContextManager, *, step_index: int

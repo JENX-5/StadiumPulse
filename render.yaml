@@ -1,0 +1,58 @@
+# Render Blueprint (Infrastructure as Code)
+# This file defines the full stack for StadiumPulse
+
+databases:
+  - name: stadiumpulse-db
+    databaseName: stadiumpulse
+    user: stadiumpulse
+    plan: free # Change this to a paid plan for production usage
+
+services:
+  - type: redis
+    name: stadiumpulse-redis
+    plan: free
+    ipAllowList: [] # Allow all internal traffic
+
+  - type: web
+    name: stadiumpulse-backend
+    env: python
+    region: oregon
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    # Run Alembic migrations and seed database before the app starts
+    preDeployCommand: "cd backend && alembic upgrade head && python -m app.db.seed"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stadiumpulse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: stadiumpulse-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        value: "replace_with_your_api_key_in_render_dashboard"
+      - key: GEMINI_API_KEY
+        value: "replace_with_your_api_key_in_render_dashboard"
+      - key: LLM_PROVIDER
+        value: "gemini"
+
+  - type: web
+    name: stadiumpulse-frontend
+    env: node
+    region: oregon
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "cd frontend && npm start"
+    envVars:
+      - key: NODE_VERSION
+        value: 20.0.0
+      - key: NEXT_PUBLIC_API_BASE_URL
+        fromService:
+          type: web
+          name: stadiumpulse-backend
+          envVarKey: RENDER_EXTERNAL_URL
