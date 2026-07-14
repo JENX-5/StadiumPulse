@@ -53,7 +53,15 @@ async def seed() -> None:
 
     async with session_scope(session_factory) as session:
         import uuid
-        venue = Venue(id=uuid.UUID("11111111-1111-1111-1111-111111111111"), name="Riverside Arena", timezone="America/New_York")
+        from sqlalchemy import select
+
+        venue_id = uuid.UUID("11111111-1111-1111-1111-111111111111")
+        existing = await session.execute(select(Venue).where(Venue.id == venue_id))
+        if existing.scalar_one_or_none():
+            logger.info("Database already seeded, skipping.")
+            return
+
+        venue = Venue(id=venue_id, name="Riverside Arena", timezone="America/New_York")
         session.add(venue)
         await session.flush()  # populate venue.id before FK references below
 
