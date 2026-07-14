@@ -79,6 +79,17 @@ class Settings(BaseSettings):
     api_v1_prefix: str = Field(default="/api/v1", alias="API_V1_PREFIX")
     cors_origins: str = Field(default="http://localhost:3000,http://localhost:3001", alias="CORS_ORIGINS")
 
+    @field_validator("database_url")
+    @classmethod
+    def fix_sqlalchemy_dialect(cls, value: str) -> str:
+        # Render and Heroku provide connection strings starting with postgres:// or postgresql://
+        # We must use asyncpg for SQLAlchemy's async engine.
+        if value.startswith("postgres://"):
+            return value.replace("postgres://", "postgresql+asyncpg://", 1)
+        if value.startswith("postgresql://") and not value.startswith("postgresql+asyncpg://"):
+            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return value
+
     @field_validator("gemini_api_key")
     @classmethod
     def warn_on_missing_llm_key(cls, value: str) -> str:
