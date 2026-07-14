@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     gemini_model_default: str = Field(default="gemini-1.5-flash", alias="GEMINI_MODEL_DEFAULT")
 
     # --- Auth ------------------------------------------------------------------
-    jwt_secret: str = Field(..., alias="JWT_SECRET")
+    jwt_secret: str = Field(default="fallback_secret_for_development_only_please_change", alias="JWT_SECRET")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     jwt_expire_minutes: int = Field(default=1440, alias="JWT_EXPIRE_MINUTES")
 
