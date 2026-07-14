@@ -35,8 +35,9 @@ export function IncidentsView() {
   });
 
   const filtered = incidents.filter((i) => {
-    if (filter === "open" && (i.status === "resolved" || i.status === "closed")) return false;
-    if (filter === "resolved" && i.status !== "resolved" && i.status !== "closed") return false;
+    const s = String(i.status).toLowerCase();
+    if (filter === "open" && (s === "resolved" || s === "closed")) return false;
+    if (filter === "resolved" && s !== "resolved" && s !== "closed") return false;
     if (search && !i.raw_text.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -51,8 +52,9 @@ export function IncidentsView() {
   };
 
   const getStatusIcon = (status: string) => {
-    if (status === "resolved" || status === "closed") return <CheckCircle2 className="h-4 w-4 text-foreground" />;
-    if (status === "in_progress") return <Clock className="h-4 w-4 text-muted-foreground" />;
+    const s = String(status).toLowerCase();
+    if (s === "resolved" || s === "closed") return <CheckCircle2 className="h-4 w-4 text-foreground" />;
+    if (s === "in_progress") return <Clock className="h-4 w-4 text-muted-foreground" />;
     return <AlertCircle className="h-4 w-4 text-destructive" />;
   };
 
@@ -61,7 +63,7 @@ export function IncidentsView() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Incidents</h1>
             <Badge variant="secondary" className="text-xs bg-muted text-foreground border-border">
-          {incidents.filter((i) => i.status === "open" || i.status === "in_progress").length} Active
+          {incidents.filter((i) => String(i.status).toLowerCase() === "open" || String(i.status).toLowerCase() === "in_progress").length} Active
         </Badge>
       </div>
 
@@ -138,7 +140,7 @@ export function IncidentsView() {
                           })}
                         </span>
                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 rounded-sm">
-                          {incident.status.replace("_", " ")}
+                          {String(incident.status).replace("_", " ")}
                         </Badge>
                         <span className="uppercase text-[9px] tracking-wider">{incident.source}</span>
                       </div>
@@ -166,7 +168,7 @@ export function IncidentsView() {
                   {selectedIncident.severity.toUpperCase()}
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {selectedIncident.status.replace("_", " ")}
+                  {String(selectedIncident.status).replace("_", " ")}
                 </Badge>
               </div>
               <div className="text-xs text-muted-foreground">
@@ -178,7 +180,7 @@ export function IncidentsView() {
               <div className="flex justify-end pt-4">
                 <Button 
                   onClick={() => resolveMutation.mutate(selectedIncident.id)}
-                  disabled={selectedIncident.status === "resolved" || selectedIncident.status === "closed" || resolveMutation.isPending}
+                  disabled={String(selectedIncident.status).toLowerCase() === "resolved" || String(selectedIncident.status).toLowerCase() === "closed" || resolveMutation.isPending}
                 >
                   {resolveMutation.isPending ? "Resolving..." : "Resolve Incident"}
                 </Button>

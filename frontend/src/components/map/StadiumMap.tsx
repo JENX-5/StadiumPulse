@@ -99,7 +99,7 @@ export function StadiumMap() {
     return map;
   }, [zones]);
 
-  const activeIncidents = incidents.filter((incident) => incident.status !== "resolved" && incident.status !== "closed");
+  const activeIncidents = incidents.filter((incident) => String(incident.status).toLowerCase() !== "resolved" && String(incident.status).toLowerCase() !== "closed");
 
   const highestPressureZone = useMemo(() => {
     const riskByZone = new Map<string, number>();

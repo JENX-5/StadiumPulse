@@ -109,14 +109,14 @@ export function KPICards() {
   });
 
   const density = liveState?.global_crowd_density ?? 0.15;
-  const activeIncidents = incidents.filter((incident) => incident.status === "open" || incident.status === "in_progress").length;
-  const availableResources = resources.filter((resource) => resource.status === "available").length;
+  const activeIncidents = incidents.filter((incident) => String(incident.status).toLowerCase() === "open" || String(incident.status).toLowerCase() === "in_progress").length;
+  const availableResources = resources.filter((resource) => String(resource.status).toLowerCase() === "available").length;
   const totalResources = resources.length;
 
   const avgResponseMs =
     activeIncidents > 0
       ? incidents
-          .filter((incident) => incident.status === "open" || incident.status === "in_progress")
+          .filter((incident) => String(incident.status).toLowerCase() === "open" || String(incident.status).toLowerCase() === "in_progress")
           .reduce((sum, incident) => sum + (Date.now() - new Date(incident.created_at).getTime()), 0) / activeIncidents
       : 0;
 
@@ -146,7 +146,7 @@ export function KPICards() {
 
   const responseSpark = useMemo(() => {
     const responseValues = incidents
-      .filter((incident) => incident.status === "open" || incident.status === "in_progress")
+      .filter((incident) => String(incident.status).toLowerCase() === "open" || String(incident.status).toLowerCase() === "in_progress")
       .map((incident) => Math.max((Date.now() - new Date(incident.created_at).getTime()) / 60000, 0));
     return buildSeries(responseValues, avgMinutes || 1, 8);
   }, [avgMinutes, incidents]);
