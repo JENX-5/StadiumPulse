@@ -12,7 +12,7 @@ services:
       - key: POSTGRES_USER
         value: stadiumpulse
       - key: POSTGRES_PASSWORD
-        generateValue: true
+        value: render_internal_pass_123
       - key: POSTGRES_DB
         value: stadiumpulse
 
@@ -33,13 +33,9 @@ services:
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
     envVars:
-      # Database connection constructed from the DB service
+      # Database connection (internal private service)
       - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: stadiumpulse-db
-          envVarKey: POSTGRES_PASSWORD
-        value: postgresql+asyncpg://stadiumpulse:${POSTGRES_PASSWORD}@stadiumpulse-db:5432/stadiumpulse
+        value: postgresql+asyncpg://stadiumpulse:render_internal_pass_123@stadiumpulse-db:5432/stadiumpulse
       
       # Redis connection constructed from the Redis service
       - key: REDIS_URL
