@@ -128,17 +128,14 @@ export function SimulationControlPanel() {
   }
 
   return (
-    <Card className="bg-card/40 backdrop-blur border-border/40 shadow-xl overflow-hidden">
-      <CardHeader className="py-3 px-4 border-b border-border/40 bg-card/60">
+    <Card className="overflow-hidden border-border/60 bg-white/90 shadow-sm backdrop-blur dark:bg-card/90">
+      <CardHeader className="border-b border-border/50 bg-muted/20 px-4 py-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground">
             <Radio className="h-4 w-4" />
             Simulation
           </CardTitle>
-          <Badge
-            variant={isRunning && !isPaused ? "default" : "secondary"}
-            className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
-          >
+          <Badge variant={isRunning && !isPaused ? "default" : "secondary"} className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]">
             {isRunning ? (isPaused ? "Paused" : "Running") : "Stopped"}
           </Badge>
         </div>
@@ -146,7 +143,7 @@ export function SimulationControlPanel() {
 
       <CardContent className="p-3">
         <Tabs defaultValue="playback">
-          <TabsList className="w-full">
+          <TabsList className="w-full bg-muted/40">
             <TabsTrigger value="playback" className="flex-1">
               Playback
             </TabsTrigger>
@@ -160,7 +157,7 @@ export function SimulationControlPanel() {
               <Button
                 size="sm"
                 variant={isRunning ? "outline" : "default"}
-                className="flex-1"
+                className="flex-1 rounded-xl"
                 disabled={isRunning || controlMutation.isPending}
                 onClick={handleStart}
               >
@@ -170,7 +167,7 @@ export function SimulationControlPanel() {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1"
+                className="flex-1 rounded-xl"
                 disabled={!isRunning || controlMutation.isPending}
                 onClick={handlePauseResume}
               >
@@ -180,7 +177,7 @@ export function SimulationControlPanel() {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 text-destructive hover:text-destructive"
+                className="flex-1 rounded-xl text-destructive hover:text-destructive"
                 disabled={!isRunning || controlMutation.isPending}
                 onClick={handleStop}
               >
@@ -241,7 +238,7 @@ export function SimulationControlPanel() {
               <select
                 value={zoneId}
                 onChange={(event) => setZoneId(event.target.value)}
-                className="h-8 rounded-lg border border-border bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="h-9 rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <option value="">Unassigned / venue-wide</option>
                 {zones.map((zone) => (
@@ -262,7 +259,7 @@ export function SimulationControlPanel() {
                     key={option.value}
                     type="button"
                     onClick={() => setSeverity(option.value)}
-                    className={`flex-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors ${
+                    className={`flex-1 rounded-xl border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                       severity === option.value
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border text-muted-foreground hover:bg-muted"
@@ -283,7 +280,7 @@ export function SimulationControlPanel() {
                 onChange={(event) => setDescription(event.target.value)}
                 rows={3}
                 placeholder="e.g. Reported medical emergency near Section 114 concourse"
-                className="rounded-lg border border-border bg-background px-2.5 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
+                className="resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
 
@@ -291,7 +288,7 @@ export function SimulationControlPanel() {
               size="sm"
               onClick={handleInjectIncident}
               disabled={injectMutation.isPending}
-              className="w-full"
+              className="w-full rounded-xl"
             >
               <AlertOctagon className="h-3.5 w-3.5" />
               Inject Incident

@@ -4,6 +4,7 @@ import { useAppStore } from "@/store/useAppStore";
 let ws: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
 let pingTimer: NodeJS.Timeout | null = null;
+let shouldReconnect = true;
 
 export function connectWebSocket() {
   if (typeof window === "undefined") return; // Only run on client
@@ -12,6 +13,7 @@ export function connectWebSocket() {
     return;
   }
 
+  shouldReconnect = true;
   console.log("Connecting to WebSocket:", config.wsUrl);
   ws = new WebSocket(config.wsUrl);
 
@@ -61,8 +63,11 @@ export function connectWebSocket() {
   ws.onclose = () => {
     console.warn("WebSocket disconnected. Reconnecting in 5s...");
     if (pingTimer) clearInterval(pingTimer);
+    pingTimer = null;
     ws = null;
-    reconnectTimer = setTimeout(connectWebSocket, 5000);
+    if (shouldReconnect) {
+      reconnectTimer = setTimeout(connectWebSocket, 5000);
+    }
   };
 
   ws.onerror = (err) => {
@@ -72,8 +77,11 @@ export function connectWebSocket() {
 }
 
 export function disconnectWebSocket() {
+  shouldReconnect = false;
   if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimer = null;
   if (pingTimer) clearInterval(pingTimer);
+  pingTimer = null;
   if (ws) {
     ws.close();
     ws = null;

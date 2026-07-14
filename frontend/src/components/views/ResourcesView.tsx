@@ -36,20 +36,20 @@ export function ResourcesView() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "medical": return <HeartPulse className="h-4 w-4 text-emerald-500" />;
-      case "security": return <ShieldAlert className="h-4 w-4 text-blue-500" />;
+      case "medical": return <HeartPulse className="h-4 w-4 text-foreground" />;
+      case "security": return <ShieldAlert className="h-4 w-4 text-foreground" />;
       case "maintenance":
-      case "cleaning": return <HardHat className="h-4 w-4 text-orange-500" />;
-      case "volunteer": return <UserSquare2 className="h-4 w-4 text-purple-500" />;
+      case "cleaning": return <HardHat className="h-4 w-4 text-foreground" />;
+      case "volunteer": return <UserSquare2 className="h-4 w-4 text-foreground" />;
       default: return <ShieldAlert className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "available": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/50";
+      case "available": return "bg-muted text-foreground border-border";
       case "assigned":
-      case "busy": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
+      case "busy": return "bg-muted/70 text-muted-foreground border-border";
       case "offline": return "bg-muted text-muted-foreground border-border";
       default: return "bg-secondary text-secondary-foreground";
     }
@@ -67,8 +67,8 @@ export function ResourcesView() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Resources</h1>
         <div className="flex gap-2">
-          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">{stats.available} Available</Badge>
-          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">{stats.assigned} Active</Badge>
+          <Badge className="bg-muted text-foreground border-border">{stats.available} Available</Badge>
+          <Badge className="bg-muted/70 text-muted-foreground border-border">{stats.assigned} Active</Badge>
         </div>
       </div>
 

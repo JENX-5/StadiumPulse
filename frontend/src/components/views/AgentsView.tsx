@@ -13,7 +13,7 @@ const AI_AGENTS = [
     icon: MessageSquare,
     model: "Claude Sonnet",
     processedToday: 47,
-    color: "text-blue-500",
+    color: "text-foreground",
   },
   {
     name: "Risk Scoring Agent",
@@ -22,7 +22,7 @@ const AI_AGENTS = [
     icon: Zap,
     model: "Real-time Pipeline",
     processedToday: 312,
-    color: "text-amber-500",
+    color: "text-foreground",
   },
   {
     name: "Dispatch Agent",
@@ -31,7 +31,7 @@ const AI_AGENTS = [
     icon: Shield,
     model: "Claude Sonnet",
     processedToday: 23,
-    color: "text-emerald-500",
+    color: "text-foreground",
   },
   {
     name: "Pattern Memory Agent",
@@ -40,7 +40,7 @@ const AI_AGENTS = [
     icon: BrainCircuit,
     model: "Claude Opus",
     processedToday: 5,
-    color: "text-purple-500",
+    color: "text-foreground",
   },
   {
     name: "Crowd Monitor Agent",
@@ -49,7 +49,7 @@ const AI_AGENTS = [
     icon: Eye,
     model: "Sensor Pipeline",
     processedToday: 1024,
-    color: "text-cyan-500",
+    color: "text-foreground",
   },
 ];
 
@@ -58,7 +58,7 @@ export function AgentsView() {
     <div className="flex flex-col h-full p-4 lg:p-6 gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">AI Agents</h1>
-        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+        <Badge className="bg-muted text-foreground border-border">
           {AI_AGENTS.filter((a) => a.status === "active").length}/{AI_AGENTS.length} Active
         </Badge>
       </div>
@@ -87,12 +87,12 @@ export function AgentsView() {
                 variant="outline"
                 className={`text-[9px] uppercase tracking-wider rounded-sm px-1.5 ${
                   agent.status === "active"
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+                    ? "bg-muted text-foreground border-border"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
                 <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1.5 ${
-                  agent.status === "active" ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground"
+                  agent.status === "active" ? "bg-foreground animate-pulse" : "bg-muted-foreground"
                 }`} />
                 {agent.status}
               </Badge>

@@ -32,16 +32,16 @@ export function IncidentsView() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toUpperCase()) {
-      case "CRITICAL": return "bg-red-500/20 text-red-400 border-red-500/50";
-      case "HIGH": return "bg-orange-500/20 text-orange-400 border-orange-500/50";
-      case "MEDIUM": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
+      case "CRITICAL": return "bg-muted text-foreground border-border";
+      case "HIGH": return "bg-muted/80 text-muted-foreground border-border";
+      case "MEDIUM": return "bg-muted/70 text-muted-foreground border-border";
       default: return "bg-secondary text-secondary-foreground";
     }
   };
 
   const getStatusIcon = (status: string) => {
-    if (status === "RESOLVED" || status === "CLOSED") return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-    if (status === "IN_PROGRESS") return <Clock className="h-4 w-4 text-yellow-500" />;
+    if (status === "RESOLVED" || status === "CLOSED") return <CheckCircle2 className="h-4 w-4 text-foreground" />;
+    if (status === "IN_PROGRESS") return <Clock className="h-4 w-4 text-muted-foreground" />;
     return <AlertCircle className="h-4 w-4 text-destructive" />;
   };
 
@@ -49,7 +49,7 @@ export function IncidentsView() {
     <div className="flex flex-col h-full p-4 lg:p-6 gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Incidents</h1>
-        <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs bg-muted text-foreground border-border">
           {incidents.filter((i) => i.status === "OPEN" || i.status === "IN_PROGRESS").length} Active
         </Badge>
       </div>
@@ -73,7 +73,7 @@ export function IncidentsView() {
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                 filter === f
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-foreground text-background"
                   : "bg-background text-muted-foreground hover:bg-muted"
               }`}
             >
