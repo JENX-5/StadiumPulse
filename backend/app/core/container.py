@@ -62,6 +62,10 @@ class Container:
     async def shutdown(self) -> None:
         """Release external resources cleanly on application shutdown."""
         await self.risk_scoring_service.close()
+        await self.event_bus.redis.aclose()
+        await self.state_manager.redis.aclose()
+        await self.timeline_engine.redis.aclose()
+        await self.notification_infra.redis.aclose()
         await self.redis.aclose()
         await self.db_engine.dispose()
         logger.info("container_shutdown_complete")

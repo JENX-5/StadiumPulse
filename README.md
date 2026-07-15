@@ -40,8 +40,39 @@ To prevent hallucinations and Prompt Injection attacks:
 - **Hybrid Deterministic Filtering:** The AI is never allowed to guess resource locations. We use rigid SQL `pgvector` queries to filter nearby guards *before* handing the context to Gemini.
 - **XML Sandboxing:** All raw user input is securely wrapped in `<incident_data>` XML tags during the prompt construction phase, ensuring the LLM cannot be hijacked by malicious input.
 
-![Multi-Agent AI Pipeline](public/ai_pipeline.png)
+```mermaid
+flowchart LR
+    subgraph Input ["Data Sources"]
+        RRI[Raw Radio Input]
+        Spat[Spatial Data]
+        Hist[Historical Patterns]
+    end
 
+    subgraph Agents ["5-Agent AI Pipeline"]
+        IAA[Incident Analysis Agent]
+        PIA[Predictive Intelligence Agent]
+        RCA[Resource Coordination Agent]
+        OCA[Operational Consensus Agent]
+        TMA[Tournament Memory Agent]
+    end
+
+    subgraph Storage ["Persistent State"]
+        PG[(pgvector DB)]
+    end
+
+    RRI -->|Extract Intent & Severity| IAA
+    Hist -->|Forecast Surge| PIA
+    Spat -->|Deterministic SQL Filter| RCA
+
+    IAA -->|Triage & Priority| OCA
+    PIA -->|Predictive Context| OCA
+    RCA -->|Available Responders| OCA
+
+    OCA -->|Negotiate Final Plan| Final[Human Approval]
+    Final -->|Resolved Incident| TMA
+    TMA -->|Embed for Learning| PG
+    PG -->|RAG Context| PIA
+```
 ---
 
 ## ⚖️ Evaluation Alignment Matrix
