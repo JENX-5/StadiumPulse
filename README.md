@@ -109,9 +109,9 @@ flowchart TB
 ```bash
 git clone https://github.com/JENX-5/StadiumPulse.git
 cd stadiumpulse
-cp backend/.env.example backend/.env
+cp .env.example .env
 ```
-*IMPORTANT: Open `backend/.env` and inject your `GEMINI_API_KEY`.*
+*IMPORTANT: Open `.env` and inject your `GEMINI_API_KEY`.*
 
 ### 2. Launch Services
 We provide a zero-configuration Docker Compose environment that orchestrates PostgreSQL (with `pgvector`), Redis, and the FastAPI backend.
@@ -169,6 +169,36 @@ StadiumPulse is built for enterprise-grade high concurrency.
 ---
 
 ## 🧪 Testing & Validation
+
+StadiumPulse includes automated test suites for both the backend and frontend to ensure high reliability.
+
+### Running Backend Tests
+The backend uses `pytest` for unit and integration tests.
+**Note:** The integration tests require PostgreSQL and Redis to be running. Ensure you start the Docker environment first!
+
+```bash
+# 1. Start the database and redis containers
+docker compose up -d
+
+# 2. Open a new terminal, activate virtual environment
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+
+# 3. Install dependencies and run tests
+pip install -r requirements.txt
+pytest tests/
+```
+
+### Running Frontend Tests
+The frontend uses `vitest` and React Testing Library for component smoke testing.
+```bash
+cd frontend
+npm install
+npm test
+```
+
+### Automated Checks
 - **Automated CI/CD:** A robust `.github/workflows/ci.yml` Pipeline automatically boots up Postgres/Redis, installs dependencies, and runs testing suites on every push.
 - **API Integration Tests:** Deep `pytest-asyncio` integration tests (`test_api_incidents.py`) deterministically validate the core REST endpoints.
 - **UI React Smoke Tests:** Enforces `jsdom` testing-library mount checks (`Dashboard.test.tsx`) to ensure zero-crash DOM trees.

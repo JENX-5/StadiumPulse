@@ -46,31 +46,81 @@ class IncidentService:
         # 1. Persist to DB
         db_obj = await incident_repo.create(db=db, obj_in=incident_in.model_dump())
         
-        # 1.5 Analyze with LLM Agent
+        # 1.5 Analyze with LLM Agent Pipeline (Full 5-Agent Debate)
         try:
-            agent = IncidentAnalysisAgent(llm_client=self.llm_client)
+            from app.agents.implementations.incident_analysis import IncidentAnalysisAgent
+            from app.agents.implementations.predictive_intelligence import PredictiveIntelligenceAgent
+            from app.agents.implementations.resource_coordination import ResourceCoordinationAgent
+            from app.agents.implementations.operational_consensus import OperationalConsensusAgent
+            from app.agents.implementations.tournament_memory import TournamentMemoryAgent
+            from app.agents.types import AgentContext, AgentRequest
+            
+            # Agent 1: Incident Analysis
+            ia_agent = IncidentAnalysisAgent(llm_client=self.llm_client)
             req = AgentRequest(
                 task_type="incident_analysis",
                 input_data={"raw_text": db_obj.raw_text}
             )
-            result = await agent.execute(req)
+            ia_result = await ia_agent.execute(req)
             
-            if result.status == "succeeded" and result.output:
-                severity_str = result.output.data.get("severity", "medium").upper()
+            shared_ctx = {}
+            if ia_result.status == "succeeded" and ia_result.output:
+                severity_str = ia_result.output.data.get("severity", "medium").upper()
                 try:
                     db_obj.severity = IncidentSeverity[severity_str]
                 except KeyError:
                     db_obj.severity = IncidentSeverity.MEDIUM
                     
-                db_obj.structured_summary = result.output.data
-                
-                # Save the updates
-                db.add(db_obj)
-                await db.commit()
-                await db.refresh(db_obj)
+                db_obj.structured_summary = ia_result.output.data
+                shared_ctx["incident_analysis"] = ia_result.output.data
+            
+            # Agent 2: Predictive Intelligence
+            pi_agent = PredictiveIntelligenceAgent(llm_client=self.llm_client)
+            pi_req = AgentRequest(
+                task_type="predict_risk",
+                input_data={"current_state": shared_ctx.get("incident_analysis", {})},
+                context=AgentContext(venue_id=str(db_obj.venue_id), shared_variables=shared_ctx)
+            )
+            pi_result = await pi_agent.execute(pi_req)
+            
+            # Agent 3: Resource Coordination
+            rc_agent = ResourceCoordinationAgent(llm_client=self.llm_client)
+            rc_req = AgentRequest(
+                task_type="coordinate_resources",
+                input_data={"incident_details": shared_ctx.get("incident_analysis", {})},
+                context=AgentContext(venue_id=str(db_obj.venue_id), shared_variables=shared_ctx)
+            )
+            rc_result = await rc_agent.execute(rc_req)
+            
+            # Agent 4: Operational Consensus
+            oc_agent = OperationalConsensusAgent(llm_client=self.llm_client)
+            messages = [
+                {"turn_number": 1, "phase": "proposal", "agent_id": "resource_coordination", "content": rc_result.output.data if rc_result.output else {}},
+                {"turn_number": 2, "phase": "proposal", "agent_id": "predictive_intelligence", "content": pi_result.output.data if pi_result.output else {}}
+            ]
+            oc_req = AgentRequest(
+                task_type="resolve_consensus",
+                input_data={"messages": messages},
+                context=AgentContext(venue_id=str(db_obj.venue_id), shared_variables=shared_ctx)
+            )
+            oc_result = await oc_agent.execute(oc_req)
+            
+            # Agent 5: Tournament Memory
+            tm_agent = TournamentMemoryAgent(llm_client=self.llm_client)
+            tm_req = AgentRequest(
+                task_type="store_memory",
+                input_data={"incident_id": str(db_obj.id), "resolution": oc_result.output.data if oc_result.output else {}},
+                context=AgentContext(venue_id=str(db_obj.venue_id), shared_variables=shared_ctx)
+            )
+            await tm_agent.execute(tm_req)
+
+            # Save the updates
+            db.add(db_obj)
+            await db.commit()
+            await db.refresh(db_obj)
         except Exception as e:
             import logging
-            logging.error(f"IncidentAnalysisAgent failed: {e}")
+            logging.error(f"Multi-Agent Pipeline failed: {e}")
         
         # 2. Construct Domain Event Payload
         payload = IncidentCreatedPayload(

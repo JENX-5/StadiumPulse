@@ -10,7 +10,12 @@ a single venue, while every other role is.
 from __future__ import annotations
 
 import uuid
-from enum import StrEnum
+import enum
+try:
+    from enum import StrEnum
+except ImportError:
+    class StrEnum(str, enum.Enum):
+        pass
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum

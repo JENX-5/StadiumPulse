@@ -21,7 +21,12 @@ of blocking on an LLM outage. The fallback's output is marked
 from __future__ import annotations
 
 import re
-from enum import StrEnum
+import enum
+try:
+    from enum import StrEnum
+except ImportError:
+    class StrEnum(str, enum.Enum):
+        pass
 from typing import Any
 
 from app.agents.base import BaseAgent

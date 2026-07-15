@@ -15,7 +15,12 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from enum import StrEnum
+import enum
+try:
+    from enum import StrEnum
+except ImportError:
+    class StrEnum(str, enum.Enum):
+        pass
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Index, String
