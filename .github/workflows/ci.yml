@@ -42,6 +42,7 @@ jobs:
       env:
         DATABASE_URL: postgresql+asyncpg://stadiumpulse:change_me_in_local_env@localhost:5432/stadiumpulse
         REDIS_URL: redis://localhost:6379/0
+        GEMINI_API_KEY: dummy-key-for-tests
       run: |
         cd backend
         pytest tests/ --cov=app
