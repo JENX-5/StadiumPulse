@@ -51,10 +51,11 @@ export function TimelineView() {
       </div>
 
       {/* Filters */}
-      <div className="flex rounded-lg border border-border overflow-hidden w-fit">
+      <div className="flex rounded-lg border border-border overflow-hidden w-fit" role="group" aria-label="Filter timeline events">
         {(["all", "incident", "agent", "simulation"] as const).map((f) => (
           <button
             key={f}
+            aria-pressed={filter === f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
               filter === f

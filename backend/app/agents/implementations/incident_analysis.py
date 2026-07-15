@@ -154,8 +154,8 @@ class IncidentAnalysisAgent(BaseAgent):
             return self._fallback_classify(raw_text)
 
     def _build_user_prompt(self, raw_text: str, context: AgentContext | None) -> str:
-        venue_hint = f"Venue: {context.venue_id}\n" if context else ""
-        return f'{venue_hint}Incident report:\n"""\n{raw_text}\n"""'
+        venue_hint = f"Venue ID: {context.venue_id}\n" if context and context.venue_id else ""
+        return f'{venue_hint}Incident report:\n<incident_data>\n{raw_text}\n</incident_data>'
 
     def _output_from_llm(self, parsed: dict[str, Any]) -> StructuredOutput:
         incident_type = str(parsed.get("incident_type", "")).strip().lower()

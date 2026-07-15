@@ -35,8 +35,8 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://stadiumpulse:stadiumpulse@localhost:5432/stadiumpulse",
         alias="DATABASE_URL",
     )
-    db_pool_size: int = Field(default=10, alias="DB_POOL_SIZE")
-    db_max_overflow: int = Field(default=5, alias="DB_MAX_OVERFLOW")
+    db_pool_size: int = Field(default=20, alias="DB_POOL_SIZE")
+    db_max_overflow: int = Field(default=10, alias="DB_MAX_OVERFLOW")
 
     # --- Redis -------------------------------------------------------------------
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")

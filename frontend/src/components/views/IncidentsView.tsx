@@ -73,16 +73,18 @@ export function IncidentsView() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
+            aria-label="Search incidents"
             placeholder="Search incidents..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-9 pl-9 pr-3 rounded-lg border border-border bg-background text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           />
         </div>
-        <div className="flex rounded-lg border border-border overflow-hidden">
+        <div className="flex rounded-lg border border-border overflow-hidden" role="group" aria-label="Filter incidents">
           {(["all", "open", "resolved"] as const).map((f) => (
             <button
               key={f}
+              aria-pressed={filter === f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                 filter === f

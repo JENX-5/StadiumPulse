@@ -187,13 +187,14 @@ export function SimulationControlPanel() {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5 font-medium uppercase tracking-wider">
+                <label htmlFor="speed-slider" className="flex items-center gap-1.5 font-medium uppercase tracking-wider">
                   <Gauge className="h-3.5 w-3.5" />
                   Speed
-                </span>
+                </label>
                 <span className="font-mono text-foreground">{speed.toFixed(1)}x</span>
               </div>
               <input
+                id="speed-slider"
                 type="range"
                 min={0.5}
                 max={10}
@@ -201,6 +202,7 @@ export function SimulationControlPanel() {
                 value={speed}
                 onChange={(event) => handleSpeedChange(Number(event.target.value))}
                 className="w-full accent-primary"
+                aria-label="Simulation playback speed"
               />
             </div>
 
@@ -231,10 +233,11 @@ export function SimulationControlPanel() {
 
           <TabsContent value="inject" className="pt-3 flex flex-col gap-2.5">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="zone-select" className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Zone
               </label>
               <select
+                id="zone-select"
                 value={zoneId}
                 onChange={(event) => setZoneId(event.target.value)}
                 className="h-9 rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -249,14 +252,15 @@ export function SimulationControlPanel() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground" id="severity-label">
                 Severity
-              </label>
-              <div className="flex gap-1.5">
+              </span>
+              <div className="flex gap-1.5" role="group" aria-labelledby="severity-label">
                 {SEVERITY_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     type="button"
+                    aria-pressed={severity === option.value}
                     onClick={() => setSeverity(option.value)}
                     className={`flex-1 rounded-xl border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                       severity === option.value
@@ -271,10 +275,11 @@ export function SimulationControlPanel() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="incident-desc" className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Description
               </label>
               <textarea
+                id="incident-desc"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 rows={3}

@@ -88,7 +88,9 @@ export function AIInsightsPanel() {
         <div className="flex items-start gap-4">
           <ConfidenceRing confidence={confidence} />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Recommended action</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground" title="AI automatically processes raw data to reduce cognitive overload for human dispatchers">
+              Recommended action (Cognitive Load Reduced)
+            </div>
             <div className="text-sm font-semibold leading-snug text-foreground">{recommendation}</div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="rounded-full border-border/60 bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-foreground">
