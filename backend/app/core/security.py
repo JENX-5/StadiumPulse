@@ -57,13 +57,13 @@ def create_access_token(
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return jwt.encode(payload, settings.jwt_secret.get_secret_value(), algorithm=settings.jwt_algorithm)
 
 
 def decode_access_token(token: str, settings: Settings) -> dict[str, Any]:
     """Decode and validate a JWT, raising `JWTError` on any failure
     (expired, bad signature, malformed, wrong type)."""
-    payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    payload = jwt.decode(token, settings.jwt_secret.get_secret_value(), algorithms=[settings.jwt_algorithm])
     if payload.get("type") != ACCESS_TOKEN_TYPE:
         raise JWTError("Unexpected token type")
     return payload

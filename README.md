@@ -30,8 +30,15 @@
 ## 🏆 The Problem
 Managing a massive 80,000-seat stadium event is chaos. Dispatchers face **severe cognitive overload** attempting to orchestrate security, medical, and maintenance teams during rapidly evolving incidents. Traditional dashboards are passive; they only show what went wrong, leaving humans to figure out *who* to send and *how* to resolve it.
 
-## 💡 The Solution
-**StadiumPulse** transforms the passive dashboard into an **active, autonomous AI assistant**. 
+## 💡 The Solution (Feature-to-Problem Mapping)
+**StadiumPulse** transforms the passive dashboard into an **active, autonomous AI assistant** that directly addresses the core problems of stadium management:
+
+| ❌ The Problem | ✅ The StadiumPulse Solution |
+|---|---|
+| **Cognitive Overload** | **Automated Triage:** The *Incident Analysis Agent* instantly classifies and prioritizes raw chaotic reports so humans don't have to manually process them. |
+| **Passive Dashboards** | **Predictive Intelligence:** The dashboard isn't just reactive; the *Predictive Intelligence Agent* constantly evaluates risk scores to forecast threats before they escalate. |
+| **"Who to send?"** | **Deterministic Pre-Filtering + AI Dispatch:** The *Resource Coordination Agent* proposes the optimal dispatch from a deterministically pre-filtered `pgvector` shortlist of available guards/medics. |
+| **"How to resolve it?"** | **Multi-Agent Negotiation:** The *Operational Consensus Agent* reviews proposals, resolves conflicts, and finalizes the deployment plan. Humans simply review and approve the AI's plan. |
 
 Instead of wrapping a single LLM prompt, StadiumPulse utilizes a complex **Multi-Agent Orchestration Engine powered by Google Gemini**. When an incident occurs, five specialized agents analyze the situation, pre-filter available resources via deterministic SQL queries (to save AI tokens and latency), and then literally *debate* the best response. Human operators monitor the live AI negotiation on a stunning real-time dashboard and approve the final consensus.
 
@@ -55,11 +62,11 @@ StadiumPulse deeply integrates Gen AI by utilizing **Google Gemini 1.5 Flash** v
 ---
 
 ## ✨ Core Features
-- **Real-Time Agent Negotiation:** Watch AI agents debate and resolve incidents live on the Timeline.
-- **Hybrid Deterministic/Gen-AI Engine:** Drastically reduces LLM hallucination and latency by using SQL and Redis to pre-filter context before invoking the LLM.
+- **Real-Time Agent Negotiation:** Watch AI agents debate and resolve incidents live on the Timeline, reducing cognitive load on human operators.
+- **Hybrid Deterministic/Gen-AI Engine:** Drastically reduces LLM hallucination and latency by using SQL and Redis to pre-filter context before invoking the LLM, ensuring the "who to send" decision is grounded in reality.
 - **Vector-Backed Memory:** Uses `pgvector` for true Semantic Search and RAG over past incidents.
 - **Production-Ready Dashboard:** A Next.js + Zustand application featuring Framer Motion micro-animations, semantic HTML, and live WebSockets.
-- **Enterprise Security:** bcrypt hashing, JWT authentication, and explicit CORS configurations.
+- **Enterprise Security:** bcrypt hashing, JWT authentication with strict Pydantic constraints, and explicit CORS configurations.
 
 ---
 

@@ -114,6 +114,7 @@ export function TopNav() {
             size="icon"
             className="relative h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             onClick={() => { setNotifOpen(!notifOpen); setSettingsOpen(false); }}
+            aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
             {recentEvents.length > 0 && (
@@ -125,7 +126,7 @@ export function TopNav() {
             <div className="absolute right-0 top-11 w-80 overflow-hidden rounded-xl border border-border/70 bg-card/95 shadow-2xl shadow-black/20 backdrop-blur-xl z-50">
               <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 bg-muted/30">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Notifications</span>
-                <button onClick={() => setNotifOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <button onClick={() => setNotifOpen(false)} className="text-muted-foreground hover:text-foreground" aria-label="Close notifications">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -163,6 +164,7 @@ export function TopNav() {
             size="icon"
             className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             onClick={() => { setSettingsOpen(!settingsOpen); setNotifOpen(false); }}
+            aria-label="Settings"
           >
             <Settings className="h-4 w-4" />
           </Button>
@@ -198,6 +200,7 @@ export function TopNav() {
           className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/70 hover:text-foreground"
           onClick={handleLogout}
           title="Sign out"
+          aria-label="Sign out"
         >
           <LogOut className="h-4 w-4" />
         </Button>

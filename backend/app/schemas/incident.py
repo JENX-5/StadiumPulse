@@ -15,8 +15,8 @@ class IncidentBase(BaseModel):
     venue_id: uuid.UUID
     zone_id: uuid.UUID | None = None
     reported_by_user_id: uuid.UUID | None = None
-    raw_text: str = Field(..., max_length=RAW_TEXT_MAX_LENGTH)
-    language: str | None = None
+    raw_text: str = Field(..., min_length=1, max_length=RAW_TEXT_MAX_LENGTH)
+    language: str | None = Field(default=None, max_length=50)
     status: IncidentStatus = IncidentStatus.OPEN
     severity: IncidentSeverity = IncidentSeverity.MEDIUM
     source: EventSource = EventSource.LIVE

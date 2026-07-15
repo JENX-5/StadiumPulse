@@ -24,8 +24,8 @@ class UserProfile(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: str
-    full_name: str
+    email: str = Field(..., min_length=5, max_length=255)
+    full_name: str = Field(..., min_length=1, max_length=255)
     role: UserRole
     venue_id: uuid.UUID | None
     is_active: bool
