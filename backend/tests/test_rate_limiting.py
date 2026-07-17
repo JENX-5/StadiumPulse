@@ -23,7 +23,7 @@ async def test_rate_limiter_rejects_requests_over_the_budget() -> None:
     settings = Settings(
         ENV="production",
         HTTP_RATE_LIMIT="5/minute",
-        JWT_SECRET="dummy_secret_for_testing_purposes_that_is_long_enough_32_chars_plus"
+        JWT_SECRET="dummy_secret_for_testing_purposes_that_is_long_enough_32_chars_plus",
     )
     app = create_app(settings=settings)
     app.state.container = await build_container(settings)
