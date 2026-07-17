@@ -19,7 +19,7 @@ vi.mock('recharts', async () => {
 
 describe('KPICards', () => {
   it('renders metric cards correctly', () => {
-    useAppStore.setState({ venueId: 'venue_123', liveState: { global_crowd_density: 0.75 } });
+    useAppStore.setState({ venueId: 'venue_123', liveState: { venue_id: 'venue_123', active_incidents: 0, global_crowd_density: 0.75, global_noise_level: 0, available_resources: 0 } });
     
     const queryClient = new QueryClient();
 
