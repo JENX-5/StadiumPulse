@@ -3,7 +3,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/)
 [![Next.js Version](https://img.shields.io/badge/Next.js-15.0-black.svg?logo=next.js)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
-[![Generative AI](https://img.shields.io/badge/GenAI-Google_Gemini_1.5_Flash-orange.svg?logo=google)](https://ai.google.dev/)
+[![Generative AI](https://img.shields.io/badge/GenAI-Google_Gemini-orange.svg?logo=google)](https://ai.google.dev/)
 [![Accessibility](https://img.shields.io/badge/accessibility-A11y_Compliant-success)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
 
@@ -15,7 +15,7 @@ StadiumPulse is an autonomous, event-driven Multi-Agent Command Center built to 
 
 - **The Problem:** Managing a massive 80,000-seat stadium event is chaos. Dispatchers face severe **cognitive overload** attempting to orchestrate security, medical, and maintenance teams. Traditional dashboards are passive; they only show what went wrong, leaving humans to figure out *who* to send and *how* to resolve it.
 - **The Solution:** **StadiumPulse** is an active, autonomous AI assistant. It intercepts chaotic incident reports, automatically triages threats, pre-filters available resources deterministically, and utilizes a multi-agent AI debate to propose the optimal dispatch plan. 
-- **The Tech Stack:** Next.js 15 App Router, FastAPI (Async), PostgreSQL + `pgvector`, Redis Pub/Sub, and Google Gemini 1.5 Flash via the `google-genai` SDK.
+- **The Tech Stack:** Next.js 15 App Router, FastAPI (Async), PostgreSQL + `pgvector`, Redis Pub/Sub, and Google Gemini (provider-swappable — Anthropic/OpenAI also implemented, see `core/llm_providers.py`) via the `google-genai` SDK.
 
 ![StadiumPulse Live Demo](public/demo.png)
 
@@ -23,10 +23,21 @@ StadiumPulse is an autonomous, event-driven Multi-Agent Command Center built to 
 
 ## 🤖 Generative AI Integration (Core Hackathon Requirement)
 
-StadiumPulse is fundamentally built around Generative AI, utilizing the **Google GenAI SDK** and the **Gemini 1.5 Flash** model for sub-millisecond, low-latency reasoning. It goes beyond a simple chatbot wrapper by implementing a fully autonomous Multi-Agent Debate architecture.
+StadiumPulse is fundamentally built around Generative AI, utilizing the **Google GenAI SDK** and a configurable Gemini Flash-tier model for structured reasoning over unstructured incident text. It goes beyond a simple chatbot wrapper by implementing a fully autonomous Multi-Agent Debate architecture.
 
 ### Why Generative AI?
-Traditional deterministic systems cannot parse the chaotic, unstructured nature of crowd panic or radio chatter. Gemini is used to instantly process unstructured text, understand spatial intent, and negotiate complex logistical deployment plans that a rigid algorithm could never resolve.
+Traditional deterministic systems cannot parse the chaotic, unstructured nature of crowd panic or radio chatter. Gemini is used to process unstructured text, understand spatial intent, and negotiate logistical deployment plans that a rigid algorithm could never resolve.
+
+### Where this actually runs in code
+If you're auditing this repo, this is the fastest way to verify the AI is real and not just a demo prop — follow the call from the SDK all the way to the HTTP request that triggers it:
+
+1. **The SDK call itself** — `backend/app/core/llm_providers.py`, `GeminiLLMClient._complete()`. This is the only place in the codebase that talks to Google's servers (`self._client.aio.models.generate_content(...)`).
+2. **Selected by config** — `build_llm_client()` in the same file, driven by `LLM_PROVIDER=gemini` in `.env`. This factory is the single call site every other part of the app goes through; nothing outside it ever imports `GeminiLLMClient` directly (see ADR-0003).
+3. **Wired in once at startup** — `backend/app/core/container.py`'s `Container.llm_client`, injected into every agent.
+4. **Called by each of the 5 agents** — every agent's `_execute()` calls `self._llm.generate_json(...)`, e.g. `agents/implementations/incident_analysis.py`, `resource_coordination.py`, `operational_consensus.py`, `predictive_intelligence.py`, `tournament_memory.py`. `generate_json` (`core/llm_client.py`) enforces strict JSON parsing with one corrective retry.
+5. **Actually triggered, per incident** — `backend/app/services/incident.py`, `IncidentService._run_agent_pipeline()`, on every `POST /api/v1/incidents/`.
+
+Watch it happen live: `docker compose logs -f backend`, then create an incident (via the dashboard or the `curl` example below) — you'll see `llm_client_built provider=gemini` at startup and each agent's call landing in real time.
 
 ### The 5-Agent Multi-Agent Pipeline
 Every incident actually runs through all five agents on creation (`IncidentService._run_agent_pipeline`, `backend/app/services/incident.py`) — each stage is independently fault-tolerant with a deterministic, non-LLM fallback if the LLM call fails, so one provider outage degrades a single stage rather than blocking incident intake:
@@ -46,6 +57,24 @@ To prevent hallucinations and Prompt Injection attacks:
 - **Hybrid Deterministic Filtering:** The AI is never asked to guess resource locations. `IncidentService._fetch_available_resources` runs a plain SQL query (venue + `status = available`, same-zone candidates first) and only ever shows the LLM resources that query already selected.
 - **XML Sandboxing:** Raw incident text is wrapped in `<incident_data>` XML tags before being handed to the Incident Analysis Agent's prompt, so the LLM treats it as data, not instructions.
 - **Structured-output contract:** Every agent call goes through `LLMClient.generate_json`, which enforces strict JSON parsing with one corrective retry before failing closed to that agent's deterministic fallback — the pipeline never silently accepts malformed model output.
+
+### Model configuration & availability
+`GEMINI_MODEL_DEFAULT` (default `gemini-3.5-flash`) selects the generation model; `GEMINI_EMBEDDING_MODEL` (default `gemini-embedding-001`) selects the embedding model used by Tournament Memory. **Google retires and gates Gemini model names over time, and access varies per API key/account** — this bit us directly during development: `gemini-1.5-flash` (an earlier default) now 404s outright, and several other model names 404 as "no longer available to new users" depending on when the key was provisioned. If agent calls are silently falling back (see `used_fallback` in each agent's output, or `structured_summary` in an incident response), check which models your key can actually reach:
+
+```bash
+docker compose exec backend python -c "
+import asyncio, os
+from google import genai
+async def main():
+    client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
+    async for m in await client.aio.models.list():
+        if 'generateContent' in (m.supported_actions or []):
+            print(m.name)
+asyncio.run(main())
+"
+```
+
+Two things worth knowing if you change the model: **"antigravity"** appears in that list and accepts `generateContent`, but it's Google's agentic coding-assistant model, not a general text model — it rejects the `system_instruction` field (`400 INVALID_ARGUMENT`) every one of our 5 agents relies on, so it's not a valid substitute here (see `GeminiLLMClient`'s docstring). Also set `LLM_RATE_LIMIT_PER_MINUTE` to match your key's *real* quota (check `https://ai.dev/rate-limit`) — a free-tier key can be as low as 5 requests/minute, and the in-process limiter (`RateLimitedLLMClient`) only helps if it's told the real number.
 
 ```mermaid
 flowchart LR
@@ -117,7 +146,7 @@ flowchart TB
         FILTER["Resource Pre-Filter (SQL)"]
     end
 
-    subgraph LLMAgents["Gen AI Agent Layer (Gemini 1.5 Flash)"]
+    subgraph LLMAgents["Gen AI Agent Layer (Google Gemini, configurable model)"]
         PIA["Predictive Intelligence Agent"]
         IAA["Incident Analysis Agent"]
         RCA["Resource Coordination Agent"]
