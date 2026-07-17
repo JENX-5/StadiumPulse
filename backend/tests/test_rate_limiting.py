@@ -20,7 +20,11 @@ async def test_rate_limiter_rejects_requests_over_the_budget() -> None:
     # `populate_by_name`), so the constructor must use the alias names --
     # passing the lowercase field names is silently ignored (`extra="ignore"`)
     # and the values fall through to the process env / .env file instead.
-    settings = Settings(ENV="production", HTTP_RATE_LIMIT="5/minute")
+    settings = Settings(
+        ENV="production", 
+        HTTP_RATE_LIMIT="5/minute",
+        JWT_SECRET="dummy_secret_for_testing_purposes_that_is_long_enough_32_chars_plus"
+    )
     app = create_app(settings=settings)
     app.state.container = await build_container(settings)
 
