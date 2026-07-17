@@ -20,13 +20,17 @@ of blocking on an LLM outage. The fallback's output is marked
 
 from __future__ import annotations
 
-import re
 import enum
+import re
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import Any
 
 from app.agents.base import BaseAgent
@@ -107,7 +111,16 @@ class IncidentAnalysisAgent(BaseAgent):
     supported_tasks: tuple[str, ...] = ("incident_analysis",)
 
     max_retries = 1
-    timeout_seconds = 20.0
+    # Must exceed the LLM client's own worst-case time, not just typical
+    # latency: generate_json can retry twice (llm_max_retries) at up to
+    # llm_timeout_seconds each, across up to two calls (initial + one
+    # corrective JSON retry) -- ~80s worst case. A shorter timeout here
+    # would let asyncio.wait_for (agents/base.py) cancel _execute() before
+    # its own try/except ever gets to run the deterministic fallback below,
+    # defeating the fallback exactly when the LLM is slow/degraded, which
+    # is the one scenario it exists for. (Found via a real degraded-model
+    # incident, not speculatively.)
+    timeout_seconds = 90.0
 
     def __init__(self, *, llm_client: LLMClient, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -160,7 +173,7 @@ class IncidentAnalysisAgent(BaseAgent):
 
     def _build_user_prompt(self, raw_text: str, context: AgentContext | None) -> str:
         venue_hint = f"Venue ID: {context.venue_id}\n" if context and context.venue_id else ""
-        return f'{venue_hint}Incident report:\n<incident_data>\n{raw_text}\n</incident_data>'
+        return f"{venue_hint}Incident report:\n<incident_data>\n{raw_text}\n</incident_data>"
 
     def _output_from_llm(self, parsed: dict[str, Any]) -> StructuredOutput:
         incident_type = str(parsed.get("incident_type", "")).strip().lower()

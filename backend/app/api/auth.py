@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.dependencies import get_db
-from app.core.exceptions import UnauthorizedError, ForbiddenError
+from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.security import JWTError, decode_access_token
 from app.db.models.user import User, UserRole
 
@@ -42,13 +42,13 @@ async def get_current_user(
 
     try:
         payload = decode_access_token(token, settings)
-    except JWTError:
-        raise UnauthorizedError("Invalid or expired token")
+    except JWTError as exc:
+        raise UnauthorizedError("Invalid or expired token") from exc
 
     try:
         user_id = uuid.UUID(payload["sub"])
-    except (KeyError, ValueError, TypeError):
-        raise UnauthorizedError("Invalid token payload")
+    except (KeyError, ValueError, TypeError) as exc:
+        raise UnauthorizedError("Invalid token payload") from exc
 
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
@@ -65,6 +65,7 @@ class RequireRole:
     Dependency class to enforce RBAC on specific routes.
     Example: `Depends(RequireRole(UserRole.DISPATCHER))`
     """
+
     def __init__(self, allowed_roles: UserRole | list[UserRole]) -> None:
         if isinstance(allowed_roles, UserRole):
             self.allowed_roles = [allowed_roles]
@@ -73,5 +74,7 @@ class RequireRole:
 
     def __call__(self, current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if current_user.role not in self.allowed_roles and current_user.role != UserRole.ADMIN:
-            raise ForbiddenError(f"Role {current_user.role} is not authorized to perform this action.")
+            raise ForbiddenError(
+                f"Role {current_user.role} is not authorized to perform this action."
+            )
         return current_user

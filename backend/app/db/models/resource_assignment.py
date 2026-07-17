@@ -12,17 +12,22 @@ manually overridden by an admin — both cases need to be representable.
 
 from __future__ import annotations
 
+import enum
 import uuid
 from datetime import datetime
-import enum
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -53,7 +58,11 @@ class ResourceAssignment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     status: Mapped[AssignmentStatus] = mapped_column(
-        SAEnum(AssignmentStatus, name="assignment_status", values_callable=lambda obj: [e.value for e in obj]),
+        SAEnum(
+            AssignmentStatus,
+            name="assignment_status",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         default=AssignmentStatus.PENDING,
     )

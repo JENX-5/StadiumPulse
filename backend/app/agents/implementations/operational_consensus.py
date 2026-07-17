@@ -28,7 +28,6 @@ from app.agents.types import (
 from app.core.exceptions import LLMClientError
 from app.core.llm_client import LLMClient
 
-
 SYSTEM_PROMPT = """You are the Operational Consensus component of a stadium operations platform.
 Your job is to resolve disagreements between various specialized AI agents handling an incident.
 You will receive a transcript of their negotiation (proposals, challenges, rebuttals, and votes).
@@ -56,7 +55,16 @@ class OperationalConsensusAgent(BaseAgent):
     supported_tasks: tuple[str, ...] = ("resolve_consensus",)
 
     max_retries = 1
-    timeout_seconds = 20.0
+    # Must exceed the LLM client's own worst-case time, not just typical
+    # latency: generate_json can retry twice (llm_max_retries) at up to
+    # llm_timeout_seconds each, across up to two calls (initial + one
+    # corrective JSON retry) -- ~80s worst case. A shorter timeout here
+    # would let asyncio.wait_for (agents/base.py) cancel _execute() before
+    # its own try/except ever gets to run the deterministic fallback below,
+    # defeating the fallback exactly when the LLM is slow/degraded, which
+    # is the one scenario it exists for. (Found via a real degraded-model
+    # incident, not speculatively.)
+    timeout_seconds = 90.0
 
     def __init__(self, *, llm_client: LLMClient, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -67,7 +75,7 @@ class OperationalConsensusAgent(BaseAgent):
     def validate_input(self, request: AgentRequest) -> None:
         super().validate_input(request)
         messages = request.input_data.get("messages")
-        
+
         if not isinstance(messages, list):
             raise AgentValidationError(
                 f"Agent '{self.agent_id}' requires 'messages' to be a list in input_data",
@@ -77,7 +85,10 @@ class OperationalConsensusAgent(BaseAgent):
     def validate_output(self, output: StructuredOutput) -> None:
         super().validate_output(output)
         data = output.data
-        if data.get("outcome") not in (ConsensusOutcome.ACCEPTED.value, ConsensusOutcome.NO_CONSENSUS.value):
+        if data.get("outcome") not in (
+            ConsensusOutcome.ACCEPTED.value,
+            ConsensusOutcome.NO_CONSENSUS.value,
+        ):
             raise AgentValidationError(
                 f"Agent '{self.agent_id}' produced an invalid outcome: {data.get('outcome')}"
             )
@@ -101,12 +112,11 @@ class OperationalConsensusAgent(BaseAgent):
             self._logger.warning("oca_llm_failed_using_fallback")
             return self._fallback_resolve(messages)
 
-    def _build_user_prompt(self, messages: list[dict[str, Any]], context: AgentContext | None) -> str:
+    def _build_user_prompt(
+        self, messages: list[dict[str, Any]], context: AgentContext | None
+    ) -> str:
         venue_hint = f"Venue: {context.venue_id}\n" if context else ""
-        return (
-            f"{venue_hint}"
-            f"Negotiation Transcript:\n{json.dumps(messages, indent=2)}\n"
-        )
+        return f"{venue_hint}Negotiation Transcript:\n{json.dumps(messages, indent=2)}\n"
 
     def _output_from_llm(self, parsed: dict[str, Any]) -> StructuredOutput:
         outcome_str = str(parsed.get("outcome", "")).strip().lower()
@@ -114,11 +124,11 @@ class OperationalConsensusAgent(BaseAgent):
             outcome = ConsensusOutcome.ACCEPTED
         else:
             outcome = ConsensusOutcome.NO_CONSENSUS
-            
+
         decision = parsed.get("decision")
         if not isinstance(decision, dict):
             decision = {}
-            
+
         return StructuredOutput(
             data={
                 "outcome": outcome.value,
@@ -135,7 +145,7 @@ class OperationalConsensusAgent(BaseAgent):
     def _fallback_resolve(self, messages: list[dict[str, Any]]) -> StructuredOutput:
         # Fallback to picking the proposal with the highest confidence
         proposals = [m for m in messages if m.get("phase") == NegotiationMessageType.PROPOSAL.value]
-        
+
         if not proposals:
             return StructuredOutput(
                 data={
@@ -147,9 +157,9 @@ class OperationalConsensusAgent(BaseAgent):
                 used_fallback=True,
                 rationale="Fallback: no proposals.",
             )
-            
+
         winner = max(proposals, key=lambda m: m.get("confidence", 0.0))
-        
+
         return StructuredOutput(
             data={
                 "outcome": ConsensusOutcome.ACCEPTED.value,
@@ -163,9 +173,11 @@ class OperationalConsensusAgent(BaseAgent):
 
     # -- ConsensusStrategy Protocol implementation ----------------------------
 
-    async def resolve(self, incident_id: str, messages: list[NegotiationMessage]) -> ConsensusDecision:
+    async def resolve(
+        self, incident_id: str, messages: list[NegotiationMessage]
+    ) -> ConsensusDecision:
         """Adapts the Agent interface to the ConsensusStrategy protocol."""
-        
+
         # Serialize messages for the agent request
         serialized_messages = [
             {
@@ -178,20 +190,20 @@ class OperationalConsensusAgent(BaseAgent):
             }
             for m in messages
         ]
-        
+
         request = AgentRequest(
             task_type="resolve_consensus",
             input_data={"messages": serialized_messages},
         )
-        
+
         # We don't have venue context here, but we can pass None.
         output = await self.execute(request, context=None)
-        
+
         # Extract voting metrics
         votes = [m for m in messages if m.phase == NegotiationMessageType.VOTE]
         supporting = {v.agent_id for v in votes if v.content.get("supports") is True}
         dissenting = {v.agent_id for v in votes if v.content.get("supports") is False}
-        
+
         winner_agent_id = "unknown"
         if output.data["outcome"] == ConsensusOutcome.ACCEPTED.value:
             # Try to attribute to the original proposer based on the decision content

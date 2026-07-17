@@ -56,7 +56,7 @@ export function RiskHeatmap() {
               r={center.r * radiusScale}
               fill={color}
               filter="url(#heatmap-blur)"
-              initial={{ opacity: 0 }}
+              initial={{ opacity: 0, r: center.r }}
               animate={{ opacity: 1, r: center.r * radiusScale, fill: color }}
               transition={{ duration: 1.5, ease: "easeInOut" }}
             />

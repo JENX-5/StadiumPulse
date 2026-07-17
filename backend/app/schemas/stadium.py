@@ -9,6 +9,7 @@ from app.db.models.resource import ResourceStatus, ResourceType
 
 class VenueResponse(BaseModel):
     """Schema for a Venue."""
+
     id: uuid.UUID
     name: str
     timezone: str
@@ -18,6 +19,7 @@ class VenueResponse(BaseModel):
 
 class ZoneResponse(BaseModel):
     """Schema for a Zone within a Venue."""
+
     id: uuid.UUID
     venue_id: uuid.UUID
     name: str
@@ -28,6 +30,7 @@ class ZoneResponse(BaseModel):
 
 class ResourceResponse(BaseModel):
     """Schema for a Resource (e.g., Medical Team, Volunteer)."""
+
     id: uuid.UUID
     venue_id: uuid.UUID
     current_zone_id: uuid.UUID | None = None

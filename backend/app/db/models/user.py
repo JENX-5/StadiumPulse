@@ -9,13 +9,17 @@ a single venue, while every other role is.
 
 from __future__ import annotations
 
-import uuid
 import enum
+import uuid
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum
@@ -50,7 +54,7 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, name="user_role", values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
-        default=UserRole.FAN
+        default=UserRole.FAN,
     )
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 

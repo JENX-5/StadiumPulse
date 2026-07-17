@@ -9,13 +9,11 @@ dispatches resources to an incident.
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 import structlog
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.db.models.resource_assignment import ResourceAssignment, AssignmentStatus
-
+from app.db.models.resource_assignment import AssignmentStatus, ResourceAssignment
 
 logger = structlog.get_logger(__name__)
 

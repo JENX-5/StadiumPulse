@@ -12,17 +12,22 @@ hot read path.
 
 from __future__ import annotations
 
+import enum
 import uuid
 from datetime import datetime
-import enum
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, Enum as SAEnum, Float, ForeignKey, Index
+from sqlalchemy import DateTime, Float, ForeignKey, Index
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -57,7 +62,12 @@ class RiskScore(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     score: Mapped[float] = mapped_column(Float, nullable=False)
     computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[RiskScoreSource] = mapped_column(
-        SAEnum(RiskScoreSource, name="risk_score_source", values_callable=lambda obj: [e.value for e in obj]), nullable=False
+        SAEnum(
+            RiskScoreSource,
+            name="risk_score_source",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=False,
     )
     # Weighted-function inputs (density, velocity, historical-pattern-match
     # score, etc.) captured alongside the output — this is what the

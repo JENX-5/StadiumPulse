@@ -20,7 +20,6 @@ from app.agents.types import AgentContext, AgentRequest, StructuredOutput
 from app.core.exceptions import LLMClientError
 from app.core.llm_client import LLMClient
 
-
 SYSTEM_PROMPT = """You are the Tournament Memory component of a stadium operations platform.
 An incident has just been resolved by the system.
 Your job is to read the incident details and the final operational consensus decision,
@@ -49,7 +48,16 @@ class TournamentMemoryAgent(BaseAgent):
     supported_tasks: tuple[str, ...] = ("generate_memory",)
 
     max_retries = 1
-    timeout_seconds = 20.0
+    # Must exceed the LLM client's own worst-case time, not just typical
+    # latency: generate_json can retry twice (llm_max_retries) at up to
+    # llm_timeout_seconds each, across up to two calls (initial + one
+    # corrective JSON retry) -- ~80s worst case. A shorter timeout here
+    # would let asyncio.wait_for (agents/base.py) cancel _execute() before
+    # its own try/except ever gets to run the deterministic fallback below,
+    # defeating the fallback exactly when the LLM is slow/degraded, which
+    # is the one scenario it exists for. (Found via a real degraded-model
+    # incident, not speculatively.)
+    timeout_seconds = 90.0
 
     def __init__(self, *, llm_client: LLMClient, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -60,7 +68,7 @@ class TournamentMemoryAgent(BaseAgent):
     def validate_input(self, request: AgentRequest) -> None:
         super().validate_input(request)
         data = request.input_data
-        
+
         if "incident" not in data or not isinstance(data["incident"], dict):
             raise AgentValidationError(
                 f"Agent '{self.agent_id}' requires 'incident' dictionary in input_data"
@@ -108,7 +116,7 @@ class TournamentMemoryAgent(BaseAgent):
 
     def _output_from_llm(self, parsed: dict[str, Any]) -> StructuredOutput:
         memory_summary = str(parsed.get("memory_summary", "")).strip()
-            
+
         return StructuredOutput(
             data={
                 "memory_summary": memory_summary or "Incident resolved.",
@@ -120,13 +128,17 @@ class TournamentMemoryAgent(BaseAgent):
 
     # -- Deterministic fallback --------------------------------------------
 
-    def _fallback_memory(self, incident: dict[str, Any], decision: dict[str, Any]) -> StructuredOutput:
+    def _fallback_memory(
+        self, incident: dict[str, Any], decision: dict[str, Any]
+    ) -> StructuredOutput:
         inc_type = incident.get("incident_type", "unknown")
         severity = incident.get("severity", "unknown")
         outcome = decision.get("outcome", "unknown")
-        
-        summary = f"{severity.title()} {inc_type} incident resulted in consensus outcome: {outcome}."
-        
+
+        summary = (
+            f"{severity.title()} {inc_type} incident resulted in consensus outcome: {outcome}."
+        )
+
         return StructuredOutput(
             data={
                 "memory_summary": summary,

@@ -9,6 +9,7 @@ from app.core.events import EventSource
 
 class IncidentCreatedPayload(BaseModel):
     """Payload for when an incident is created."""
+
     incident_id: str
     venue_id: str
     status: str
@@ -18,6 +19,7 @@ class IncidentCreatedPayload(BaseModel):
 
 class IncidentUpdatedPayload(BaseModel):
     """Payload for when an incident is updated."""
+
     incident_id: str
     venue_id: str
     status: str | None = None
@@ -26,6 +28,7 @@ class IncidentUpdatedPayload(BaseModel):
 
 class EventResponse(BaseModel):
     """API response model for an Event."""
+
     event_id: str
     event_type: str
     source: EventSource

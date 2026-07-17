@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class OperationalStateManager:
     """Maintains the real-time stadium state hot-cache using Redis.
-    
+
     This service tracks active incidents, crowd density, and resource statuses
     so the frontend and AI agents can query the current state without hitting
     the primary Postgres database heavily.
@@ -25,7 +25,7 @@ class OperationalStateManager:
         state_json = await self.redis.get(key)
         if state_json:
             return json.loads(state_json)
-            
+
         # Default empty state if not initialized
         return {
             "venue_id": venue_id,
@@ -38,11 +38,11 @@ class OperationalStateManager:
     async def update_state(self, venue_id: str, updates: dict[str, Any]) -> dict[str, Any]:
         """Merge updates into the current operational state."""
         key = f"{self.STATE_PREFIX}{venue_id}"
-        
+
         # Read-modify-write (in a production environment, we'd use Redis JSON or Lua script)
         current_state = await self.get_state(venue_id)
         current_state.update(updates)
-        
+
         await self.redis.set(key, json.dumps(current_state))
         logger.info(f"Updated operational state for venue {venue_id}")
         return current_state

@@ -30,15 +30,30 @@ services:
           name: stadiumpulse-redis
           property: connectionString
 
+      # `sync: false` is Render's actual mechanism for secrets that must be
+      # entered manually in the dashboard: it tells Render to leave whatever
+      # value is already set there alone. The previous checked-in placeholder
+      # strings were a real risk -- re-applying this blueprint would have
+      # overwritten a real, already-configured secret with literal placeholder
+      # text on the next sync, and `Settings.reject_weak_production_secrets`
+      # (core/config.py) will now refuse to boot at all if that ever happens.
       - key: GEMINI_API_KEY
-        value: "add_your_gemini_key_in_render_dashboard"
+        sync: false
       - key: JWT_SECRET
-        value: "add_your_jwt_secret_in_render_dashboard"
-        
+        sync: false
+
       - key: API_V1_PREFIX
         value: /api/v1
+      # Was "*" -- with allow_credentials=True (main.py's CORSMiddleware),
+      # a wildcard origin means any website can call the authenticated API
+      # surface with a stolen/leaked bearer token; scope it to the actual
+      # deployed frontend origin instead.
       - key: CORS_ORIGINS
-        value: "*"
+        value: "https://stadiumpulse-frontend.onrender.com"
+      - key: ENV
+        value: production
+      - key: HTTP_RATE_LIMIT
+        value: "30/minute"
 
   # 3. Frontend (Web Service)
   - type: web

@@ -21,7 +21,6 @@ from app.agents.types import AgentContext, AgentRequest, StructuredOutput
 from app.core.exceptions import LLMClientError
 from app.core.llm_client import LLMClient
 
-
 SYSTEM_PROMPT = """You are the Resource Coordination component of a stadium operations platform.
 You are given a structured incident report and a list of currently available resources.
 Your job is to rank the available resources from most suitable to least suitable for handling this incident.
@@ -48,7 +47,16 @@ class ResourceCoordinationAgent(BaseAgent):
     supported_tasks: tuple[str, ...] = ("rank_resources",)
 
     max_retries = 1
-    timeout_seconds = 20.0
+    # Must exceed the LLM client's own worst-case time, not just typical
+    # latency: generate_json can retry twice (llm_max_retries) at up to
+    # llm_timeout_seconds each, across up to two calls (initial + one
+    # corrective JSON retry) -- ~80s worst case. A shorter timeout here
+    # would let asyncio.wait_for (agents/base.py) cancel _execute() before
+    # its own try/except ever gets to run the deterministic fallback below,
+    # defeating the fallback exactly when the LLM is slow/degraded, which
+    # is the one scenario it exists for. (Found via a real degraded-model
+    # incident, not speculatively.)
+    timeout_seconds = 90.0
 
     def __init__(self, *, llm_client: LLMClient, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -60,7 +68,7 @@ class ResourceCoordinationAgent(BaseAgent):
         super().validate_input(request)
         incident = request.input_data.get("incident")
         available_resources = request.input_data.get("available_resources")
-        
+
         if not incident or not isinstance(incident, dict):
             raise AgentValidationError(
                 f"Agent '{self.agent_id}' requires a valid 'incident' dictionary in input_data",
@@ -100,7 +108,10 @@ class ResourceCoordinationAgent(BaseAgent):
             return self._fallback_rank(incident, available_resources)
 
     def _build_user_prompt(
-        self, incident: dict[str, Any], available_resources: list[dict[str, Any]], context: AgentContext | None
+        self,
+        incident: dict[str, Any],
+        available_resources: list[dict[str, Any]],
+        context: AgentContext | None,
     ) -> str:
         venue_hint = f"Venue: {context.venue_id}\n" if context else ""
         return (
@@ -113,7 +124,7 @@ class ResourceCoordinationAgent(BaseAgent):
         ranked_resource_ids = parsed.get("ranked_resource_ids", [])
         if not isinstance(ranked_resource_ids, list):
             ranked_resource_ids = []
-            
+
         return StructuredOutput(
             data={
                 "ranked_resource_ids": [str(rid) for rid in ranked_resource_ids],
@@ -126,10 +137,12 @@ class ResourceCoordinationAgent(BaseAgent):
 
     # -- Deterministic fallback --------------------------------------------
 
-    def _fallback_rank(self, incident: dict[str, Any], available_resources: list[dict[str, Any]]) -> StructuredOutput:
+    def _fallback_rank(
+        self, incident: dict[str, Any], available_resources: list[dict[str, Any]]
+    ) -> StructuredOutput:
         # A very basic fallback that ranks matching types first
         incident_type = incident.get("incident_type", "").lower()
-        
+
         def score_resource(r: dict[str, Any]) -> int:
             score = 0
             # 1. Exact type match
@@ -137,10 +150,10 @@ class ResourceCoordinationAgent(BaseAgent):
                 score += 10
             # 2. Could add zone proximity here in the future if location data is passed
             return score
-            
+
         ranked = sorted(available_resources, key=score_resource, reverse=True)
         ranked_ids = [str(r.get("id")) for r in ranked if r.get("id")]
-        
+
         return StructuredOutput(
             data={
                 "ranked_resource_ids": ranked_ids,

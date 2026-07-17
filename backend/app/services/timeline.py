@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class TimelineEngine:
     """Timeline engine to record chronological operational actions.
-    
+
     Uses Redis Streams (XADD/XREVRANGE) to provide a fast, ordered timeline
     of events (Missions, Incidents, Resource Assignments).
     """
@@ -33,7 +33,7 @@ class TimelineEngine:
         # Get newest first
         results = await self.redis.xrevrange(self.STREAM_KEY, max="+", min="-", count=count * 5)
         timeline = []
-        
+
         for message_id, data in results:
             if data.get("venue_id") == venue_id:
                 timeline.append(
@@ -45,5 +45,5 @@ class TimelineEngine:
                 )
             if len(timeline) >= count:
                 break
-                
+
         return timeline

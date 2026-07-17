@@ -7,11 +7,12 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.events import EventSource
-from app.db.models.incident import IncidentSeverity, IncidentStatus, RAW_TEXT_MAX_LENGTH
+from app.db.models.incident import RAW_TEXT_MAX_LENGTH, IncidentSeverity, IncidentStatus
 
 
 class IncidentBase(BaseModel):
     """Shared properties for all Incident schemas."""
+
     venue_id: uuid.UUID
     zone_id: uuid.UUID | None = None
     reported_by_user_id: uuid.UUID | None = None
@@ -24,11 +25,13 @@ class IncidentBase(BaseModel):
 
 class IncidentCreate(IncidentBase):
     """Schema for creating a new Incident."""
+
     pass
 
 
 class IncidentUpdate(BaseModel):
     """Schema for updating an existing Incident (patch)."""
+
     zone_id: uuid.UUID | None = None
     status: IncidentStatus | None = None
     severity: IncidentSeverity | None = None
@@ -38,6 +41,7 @@ class IncidentUpdate(BaseModel):
 
 class IncidentResponse(IncidentBase):
     """Schema for returning an Incident to clients."""
+
     id: uuid.UUID
     structured_summary: dict[str, Any] | None = None
     resolved_at: datetime | None = None

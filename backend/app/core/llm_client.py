@@ -205,7 +205,9 @@ class AnthropicLLMClient(LLMClient):
 
     @staticmethod
     def _try_parse_json(text: str) -> dict[str, Any] | None:
-        cleaned = text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        cleaned = (
+            text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        )
         try:
             result = json.loads(cleaned)
         except json.JSONDecodeError:

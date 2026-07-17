@@ -17,16 +17,13 @@ import uuid
 import pytest
 from sqlalchemy.orm import configure_mappers
 
-from app.db import models
-from app.db.models.incident import Incident, IncidentSeverity, IncidentStatus, RAW_TEXT_MAX_LENGTH
-from app.db.models.negotiation import Negotiation, NegotiationPhase
-from app.db.models.resource import Resource, ResourceStatus, ResourceType
-from app.db.models.resource_assignment import AssignmentStatus, ResourceAssignment
-from app.db.models.risk_score import RiskScore, RiskScoreSource
-from app.db.models.tournament_memory import EMBEDDING_DIMENSION, TournamentMemory
-from app.db.models.user import User, UserRole
-from app.db.models.venue import Venue
-from app.db.models.zone import Zone
+from app.db.models.incident import RAW_TEXT_MAX_LENGTH, Incident, IncidentSeverity, IncidentStatus
+from app.db.models.negotiation import NegotiationPhase
+from app.db.models.resource import ResourceStatus, ResourceType
+from app.db.models.resource_assignment import AssignmentStatus
+from app.db.models.risk_score import RiskScoreSource
+from app.db.models.tournament_memory import EMBEDDING_DIMENSION
+from app.db.models.user import UserRole
 from app.db.session import Base
 
 

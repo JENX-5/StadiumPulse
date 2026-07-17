@@ -51,13 +51,13 @@ const layerLabels = [
 function toneClasses(tone: string) {
   switch (tone) {
     case "green":
-      return "bg-slate-900 text-white border-slate-300";
+      return "bg-emerald-500 text-white border-emerald-300";
     case "amber":
-      return "bg-slate-700 text-white border-slate-300";
+      return "bg-amber-500 text-white border-amber-300";
     case "red":
-      return "bg-slate-950 text-white border-slate-300";
+      return "bg-red-500 text-white border-red-300";
     default:
-      return "bg-slate-800 text-white border-slate-300";
+      return "bg-blue-500 text-white border-blue-300";
   }
 }
 

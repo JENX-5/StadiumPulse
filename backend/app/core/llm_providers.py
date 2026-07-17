@@ -144,7 +144,17 @@ class OpenAILLMClient(LLMClient):
 
 
 class GeminiLLMClient(LLMClient):
-    """Gemini-backed implementation of `LLMClient` (via the `google-genai` SDK)."""
+    """Gemini-backed implementation of `LLMClient` (via the `google-genai` SDK).
+
+    Every call here always sets `system_instruction` (the agent's system
+    prompt) separately from `contents` (the user prompt) -- this is why
+    Google's "antigravity" model can't be used as `gemini_model_default`
+    despite appearing in the API's model list with `generateContent` support:
+    it's a distinct agentic/coding-assistant model, not a general text model,
+    and rejects `system_instruction` with `400 INVALID_ARGUMENT: Developer
+    instruction is not enabled for models/antigravity-...` (verified directly
+    against the live API). Stick to the `gemini-*-flash` line here.
+    """
 
     def __init__(self, settings: Settings) -> None:
         from google import genai  # local import: optional dependency
@@ -178,7 +188,7 @@ class GeminiLLMClient(LLMClient):
                 }
                 if is_json:
                     config_kwargs["response_mime_type"] = "application/json"
-                    
+
                 response = await asyncio.wait_for(
                     self._client.aio.models.generate_content(
                         model=model,

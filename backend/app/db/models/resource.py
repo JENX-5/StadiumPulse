@@ -10,16 +10,21 @@ happens here, entirely outside the agent.
 
 from __future__ import annotations
 
-import uuid
 import enum
+import uuid
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum as SAEnum, ForeignKey, String
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -65,10 +70,17 @@ class Resource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     label: Mapped[str] = mapped_column(String(200), nullable=False)
     resource_type: Mapped[ResourceType] = mapped_column(
-        SAEnum(ResourceType, name="resource_type", values_callable=lambda obj: [e.value for e in obj]), nullable=False
+        SAEnum(
+            ResourceType, name="resource_type", values_callable=lambda obj: [e.value for e in obj]
+        ),
+        nullable=False,
     )
     status: Mapped[ResourceStatus] = mapped_column(
-        SAEnum(ResourceStatus, name="resource_status", values_callable=lambda obj: [e.value for e in obj]),
+        SAEnum(
+            ResourceStatus,
+            name="resource_status",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         default=ResourceStatus.AVAILABLE,
     )

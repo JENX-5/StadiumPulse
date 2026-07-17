@@ -2,19 +2,16 @@
 Risk API endpoints.
 """
 
-
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
-from app.core.dependencies import get_container, get_db
 from app.core.container import Container
+from app.core.dependencies import get_container, get_db
 from app.db.models.user import User
 from app.repositories.stadium import zone_repo
-
 
 router = APIRouter()
 
@@ -33,11 +30,11 @@ async def get_risk_heatmap(
     zones = await zone_repo.get_by_venue(db, venue_id)
     zone_ids = [str(zone.id) for zone in zones]
     scores = await container.risk_scoring_service.get_venue_scores(str(venue_id), zone_ids)
-    
+
     heatmap = {str(zone.id): 0.0 for zone in zones}
     for zid, result in scores.items():
         heatmap[zid] = result.score
-        
+
     return heatmap
 
 
@@ -58,7 +55,7 @@ async def get_zone_risk(
             "risk_score": 0.0,
             "contributing_factors": {},
         }
-        
+
     return {
         "zone_id": str(zone_id),
         "risk_score": result.score,

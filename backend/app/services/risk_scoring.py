@@ -30,7 +30,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from redis.asyncio import Redis
@@ -172,9 +172,7 @@ class RiskScoringService:
         computed_at = datetime.now(timezone.utc)
 
         previous = await self.get_current_score(zone_id)
-        crossed = score >= self.threshold and (
-            previous is None or previous.score < self.threshold
-        )
+        crossed = score >= self.threshold and (previous is None or previous.score < self.threshold)
 
         result = RiskScoreResult(
             zone_id=zone_id,

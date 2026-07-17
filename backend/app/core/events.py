@@ -14,15 +14,19 @@ file is intentionally minimal at the foundation stage.
 
 from __future__ import annotations
 
+import enum
 import json
 import uuid
-from datetime import timezone, datetime
-import enum
+from datetime import datetime, timezone
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field

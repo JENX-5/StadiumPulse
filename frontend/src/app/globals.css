@@ -92,4 +92,19 @@
   html {
     @apply font-sans;
   }
+
+  /* WCAG 2.3.3: honor the OS-level reduced-motion preference for every
+     plain-CSS/Tailwind animation (animate-pulse, animate-ping, hover/focus
+     transitions) -- MotionConfig in app/providers.tsx handles framer-motion
+     specifically; this covers everything else. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

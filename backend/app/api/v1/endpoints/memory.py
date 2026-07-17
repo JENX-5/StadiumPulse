@@ -2,9 +2,7 @@
 Memory API endpoints.
 """
 
-
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -14,7 +12,6 @@ from app.api.auth import get_current_user
 from app.core.dependencies import get_db
 from app.db.models.tournament_memory import TournamentMemory
 from app.db.models.user import User
-
 
 router = APIRouter()
 
@@ -37,7 +34,7 @@ async def list_memories(
     )
     result = await db.execute(stmt)
     memories = result.scalars().all()
-    
+
     return [
         {
             "id": str(m.id),

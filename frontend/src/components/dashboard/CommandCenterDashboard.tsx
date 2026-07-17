@@ -24,9 +24,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { simulationApi } from "@/services/api";
+import { incidentsApi, simulationApi } from "@/services/api";
 import { useAppStore } from "@/store/useAppStore";
 import { SimulationControlPanel } from "@/components/simulation/SimulationControlPanel";
+
+/** Active-incident count from the incidents API — the source of truth
+ * used by IncidentPanel and KPICards. The header/health widgets used to
+ * derive this only from `timelineEvents`, which stay empty until the
+ * simulator streams data, so they'd contradict the Incidents tab on a
+ * fresh page load. */
+function useActiveIncidentsCount() {
+  const { venueId } = useAppStore();
+  const { data: incidents = [] } = useQuery({
+    queryKey: ["incidents", venueId],
+    queryFn: () => incidentsApi.listByVenue(venueId),
+    enabled: !!venueId,
+  });
+  return incidents.filter((incident) => {
+    const status = String(incident.status).toLowerCase();
+    return status === "open" || status === "in_progress";
+  }).length;
+}
 
 function useLiveClock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -53,10 +71,10 @@ function StatPill({
 }) {
   const toneClasses = {
     neutral: "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700",
-    blue: "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700",
-    green: "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700",
-    amber: "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700",
-    red: "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700",
+    blue: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-500/30",
+    green: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/30",
+    amber: "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/30",
+    red: "bg-red-50 text-red-700 ring-red-200 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-500/30",
   }[tone];
 
   return (
@@ -78,8 +96,9 @@ function OperationalHealthCard() {
     queryKey: ["simulation-status"],
     queryFn: () => simulationApi.getStatus(),
   });
+  const activeIncidentsCount = useActiveIncidentsCount();
 
-  const activeIncidents = liveState?.active_incidents ?? 0;
+  const activeIncidents = liveState?.active_incidents ?? activeIncidentsCount;
   const crowdDensity = liveState?.global_crowd_density ?? 0.15;
   const availableResources = liveState?.available_resources ?? 0;
   const aiActive = timelineEvents.some((event) => event.type.includes("agent"));
@@ -99,10 +118,10 @@ function OperationalHealthCard() {
             variant="outline"
             className={`rounded-full px-2.5 py-0.5 text-[10px] uppercase tracking-[0.18em] ${
               health.tone === "green"
-                ? "border-border/70 bg-background text-foreground"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-300"
                 : health.tone === "amber"
-                  ? "border-border/70 bg-muted/70 text-muted-foreground"
-                  : "border-border/70 bg-muted text-foreground"
+                  ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300"
+                  : "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/15 dark:text-red-300"
             }`}
           >
             {health.label}
@@ -149,6 +168,8 @@ export function CommandCenterDashboard() {
   const clock = useLiveClock();
   const { liveState, timelineEvents } = useAppStore();
   const recentAlerts = timelineEvents.filter((event) => event.type.includes("incident") || event.type.includes("alert")).slice(0, 3);
+  const activeIncidentsCount = useActiveIncidentsCount();
+  const alertBufferCount = Math.max(recentAlerts.length, activeIncidentsCount);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4 2xl:px-5 2xl:py-5 overflow-hidden">
@@ -163,7 +184,7 @@ export function CommandCenterDashboard() {
         <StatPill icon={Wifi} label="Telemetry" value={liveState ? "Connected" : "Syncing"} tone={liveState ? "green" : "amber"} />
         <StatPill icon={Sparkles} label="AI engine" value={timelineEvents.some((event) => event.type.includes("agent")) ? "Predictive active" : "Standing by"} tone="blue" />
         <StatPill icon={Radio} label="System load" value={liveState ? `${Math.round((liveState.global_crowd_density ?? 0.15) * 100)}% crowd pressure` : "Awaiting data"} tone="amber" />
-        <StatPill icon={AlertTriangle} label="Alert buffer" value={`${recentAlerts.length} recent`} tone={recentAlerts.length > 0 ? "red" : "green"} />
+        <StatPill icon={AlertTriangle} label="Alert buffer" value={`${alertBufferCount} active`} tone={alertBufferCount > 0 ? "red" : "green"} />
       </motion.div>
 
       <motion.div 

@@ -84,7 +84,9 @@ class HighestConfidenceStrategy:
     out of scope for Module 3.
     """
 
-    async def resolve(self, incident_id: str, messages: list[NegotiationMessage]) -> ConsensusDecision:
+    async def resolve(
+        self, incident_id: str, messages: list[NegotiationMessage]
+    ) -> ConsensusDecision:
         proposals = [m for m in messages if m.phase == NegotiationMessageType.PROPOSAL]
         votes = [m for m in messages if m.phase == NegotiationMessageType.VOTE]
 

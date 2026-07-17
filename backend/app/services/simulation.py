@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 
 from app.core.events import Event, EventChannel, EventSource
 from app.schemas.simulation import SimulationControl, SimulationStatusResponse
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class SimulationEngine:
     """Background simulator generating stadium traffic, crowd density, and mock incidents.
-    
+
     This engine publishes strictly EventSource.SIMULATION events to the Event Bus
     so that downstream agents can train/test without contaminating live operational data.
     """

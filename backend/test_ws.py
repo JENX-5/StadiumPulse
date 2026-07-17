@@ -1,5 +1,7 @@
 import asyncio
+
 import websockets
+
 
 async def test():
     try:
@@ -10,5 +12,6 @@ async def test():
             print(f"Received: {response}")
     except Exception as e:
         print(f"Error: {e}")
+
 
 asyncio.run(test())

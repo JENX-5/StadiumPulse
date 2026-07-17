@@ -34,6 +34,11 @@ bcrypt==4.0.1
 # parse form-encoded request bodies.
 python-multipart==0.0.17
 
+# --- Rate limiting ---------------------------------------------------------
+# Per-client-IP HTTP rate limiting (main.py) — independent of the in-process
+# per-provider LLM call budget in core/llm_providers.py's RateLimitedLLMClient.
+slowapi==0.1.9
+
 # --- Observability -------------------------------------------------------
 structlog==24.4.0
 

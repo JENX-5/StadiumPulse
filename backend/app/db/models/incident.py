@@ -13,17 +13,22 @@ database module.
 
 from __future__ import annotations
 
+import enum
 import uuid
 from datetime import datetime
-import enum
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Index, String
+from sqlalchemy import DateTime, ForeignKey, Index, String
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -80,17 +85,29 @@ class Incident(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     structured_summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     status: Mapped[IncidentStatus] = mapped_column(
-        SAEnum(IncidentStatus, name="incident_status", values_callable=lambda obj: [e.value for e in obj]),
+        SAEnum(
+            IncidentStatus,
+            name="incident_status",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         default=IncidentStatus.OPEN,
     )
     severity: Mapped[IncidentSeverity] = mapped_column(
-        SAEnum(IncidentSeverity, name="incident_severity", values_callable=lambda obj: [e.value for e in obj]),
+        SAEnum(
+            IncidentSeverity,
+            name="incident_severity",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         default=IncidentSeverity.MEDIUM,
     )
     source: Mapped[EventSource] = mapped_column(
-        SAEnum(EventSource, name="incident_source", values_callable=lambda obj: [e.value for e in obj]), nullable=False, default=EventSource.LIVE
+        SAEnum(
+            EventSource, name="incident_source", values_callable=lambda obj: [e.value for e in obj]
+        ),
+        nullable=False,
+        default=EventSource.LIVE,
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

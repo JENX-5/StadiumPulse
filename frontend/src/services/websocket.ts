@@ -1,5 +1,6 @@
 import { config } from "@/lib/config";
 import { useAppStore } from "@/store/useAppStore";
+import { useAuthStore } from "@/store/useAuthStore";
 
 let ws: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
@@ -18,9 +19,17 @@ export function connectWebSocket(queryClient?: any) {
     return;
   }
 
+  // The backend now requires a valid JWT on the WS handshake (query param,
+  // since browsers can't set custom headers on a WebSocket connection) — see
+  // backend/app/api/websockets/router.py. Without a token there is no
+  // authenticated session yet, so don't attempt (and don't reconnect-loop).
+  const token = useAuthStore.getState().token;
+  if (!token) return;
+
   shouldReconnect = true;
+  const url = `${config.wsUrl}?token=${encodeURIComponent(token)}`;
   console.log("Connecting to WebSocket:", config.wsUrl);
-  ws = new WebSocket(config.wsUrl);
+  ws = new WebSocket(url);
 
   ws.onopen = () => {
     console.log("WebSocket connected.");

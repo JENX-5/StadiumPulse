@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 
 import structlog
 

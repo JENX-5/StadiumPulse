@@ -39,8 +39,12 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("timezone", sa.String(64), nullable=False, server_default="UTC"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     # --- users -----------------------------------------------------------------
@@ -63,8 +67,12 @@ def upgrade() -> None:
             server_default="fan",
         ),
         sa.Column("is_active", sa.Boolean, nullable=False, server_default=sa.true()),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
 
@@ -80,8 +88,12 @@ def upgrade() -> None:
         ),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("capacity", sa.Integer, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
     # --- resources -----------------------------------------------------------
@@ -110,7 +122,9 @@ def upgrade() -> None:
         sa.Column("label", sa.String(200), nullable=False),
         sa.Column(
             "resource_type",
-            sa.Enum("medical", "security", "cleaning", "volunteer", "maintenance", name="resource_type"),
+            sa.Enum(
+                "medical", "security", "cleaning", "volunteer", "maintenance", name="resource_type"
+            ),
             nullable=False,
         ),
         sa.Column(
@@ -119,8 +133,12 @@ def upgrade() -> None:
             nullable=False,
             server_default="available",
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     # This is the exact filter the SQL pre-filter step (Critical Fix #2) uses
     # before the Resource Coordination Agent ever sees a shortlist.
@@ -172,8 +190,12 @@ def upgrade() -> None:
             server_default="live",
         ),
         sa.Column("resolved_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index(
         "ix_incidents_venue_status_severity", "incidents", ["venue_id", "status", "severity"]
@@ -198,8 +220,12 @@ def upgrade() -> None:
         sa.Column("agent_name", sa.String, nullable=False),
         sa.Column("content", postgresql.JSONB, nullable=False),
         sa.Column("rationale", sa.String, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index("ix_negotiations_incident_turn", "negotiations", ["incident_id", "turn_number"])
 
@@ -222,7 +248,11 @@ def upgrade() -> None:
         sa.Column(
             "status",
             sa.Enum(
-                "pending", "acknowledged", "en_route", "completed", "cancelled",
+                "pending",
+                "acknowledged",
+                "en_route",
+                "completed",
+                "cancelled",
                 name="assignment_status",
             ),
             nullable=False,
@@ -230,15 +260,15 @@ def upgrade() -> None:
         ),
         sa.Column("assigned_by", sa.String(200), nullable=False),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
-    op.create_index(
-        "ix_resource_assignments_incident", "resource_assignments", ["incident_id"]
-    )
-    op.create_index(
-        "ix_resource_assignments_resource", "resource_assignments", ["resource_id"]
-    )
+    op.create_index("ix_resource_assignments_incident", "resource_assignments", ["incident_id"])
+    op.create_index("ix_resource_assignments_resource", "resource_assignments", ["resource_id"])
 
     # --- risk_scores ---------------------------------------------------------
     op.create_table(
@@ -259,8 +289,12 @@ def upgrade() -> None:
         ),
         sa.Column("contributing_factors", postgresql.JSONB, nullable=True),
         sa.Column("narrative", sa.String, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index("ix_risk_scores_zone_computed_at", "risk_scores", ["zone_id", "computed_at"])
 
@@ -284,8 +318,12 @@ def upgrade() -> None:
             server_default="{}",
         ),
         sa.Column("metadata", postgresql.JSONB, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index(
         "ix_tournament_memory_embedding",

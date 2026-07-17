@@ -15,7 +15,7 @@ today.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.agents.types import AgentMemory

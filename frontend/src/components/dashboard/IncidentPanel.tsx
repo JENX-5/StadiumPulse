@@ -58,25 +58,29 @@ export function IncidentPanel() {
             </div>
           ) : (
             <div className="flex flex-col">
-              {incidents.map((incident) => (
-                <div
-                  key={incident.id}
-                  className="group cursor-pointer border-b border-border/20 px-3 py-3 transition-colors hover:bg-muted/40"
-                >
-                  <div className="mb-1.5 flex items-start justify-between gap-2">
-                    <span className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-primary transition-colors">
-                      {incident.raw_text.length > 50 ? incident.raw_text.substring(0, 50) + "…" : incident.raw_text}
-                    </span>
-                    <Badge variant="outline" className={`rounded-full border px-1.5 py-0 text-[9px] font-bold uppercase tracking-[0.18em] ${getSeverityColor(incident.severity)}`}>
-                      {incident.severity.toUpperCase()}
-                    </Badge>
+              {incidents.map((incident) => {
+                const isTruncated = incident.raw_text.length > 50;
+                const headline = isTruncated ? incident.raw_text.substring(0, 50) + "…" : incident.raw_text;
+                return (
+                  <div
+                    key={incident.id}
+                    className="group cursor-pointer border-b border-border/20 px-3 py-3 transition-colors hover:bg-muted/40"
+                  >
+                    <div className="mb-1.5 flex items-start justify-between gap-2">
+                      <span className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-primary transition-colors">
+                        {headline}
+                      </span>
+                      <Badge variant="outline" className={`rounded-full border px-1.5 py-0 text-[9px] font-bold uppercase tracking-[0.18em] ${getSeverityColor(incident.severity)}`}>
+                        {incident.severity.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                      {isTruncated ? <span className="truncate pr-4">{incident.raw_text}</span> : <span />}
+                      <span className="shrink-0">{new Date(incident.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                    <span className="truncate pr-4">{incident.raw_text}</span>
-                    <span className="shrink-0">{new Date(incident.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>

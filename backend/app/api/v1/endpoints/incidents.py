@@ -1,11 +1,12 @@
 import uuid
-from typing import Sequence
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import RequireRole, get_current_user
 from app.core.dependencies import get_db, get_incident_service
 from app.db.models.incident import IncidentSeverity, IncidentStatus
+from app.db.models.user import User, UserRole
 from app.schemas.incident import IncidentCreate, IncidentResponse, IncidentUpdate
 from app.services.incident import IncidentService
 
@@ -17,8 +18,14 @@ async def create_incident(
     incident_in: IncidentCreate,
     db: AsyncSession = Depends(get_db),
     incident_service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(RequireRole(UserRole.DISPATCHER)),
 ):
-    """Create a new incident and dispatch an event."""
+    """Create a new incident and dispatch an event.
+
+    Dispatcher-gated (same convention as `resources.py`'s dispatch route):
+    incident creation triggers real LLM calls and writes operational state,
+    so it must not be reachable by an unauthenticated caller.
+    """
     return await incident_service.create_incident(db, incident_in)
 
 
@@ -27,6 +34,7 @@ async def get_incident(
     incident_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     incident_service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(get_current_user),
 ):
     """Retrieve an incident by ID."""
     incident = await incident_service.get_incident(db, incident_id)
@@ -44,6 +52,7 @@ async def get_incidents_by_venue(
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
     incident_service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(get_current_user),
 ):
     """List incidents for a given venue with optional filtering."""
     return await incident_service.get_incidents_by_venue(
@@ -57,10 +66,11 @@ async def update_incident(
     update_in: IncidentUpdate,
     db: AsyncSession = Depends(get_db),
     incident_service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(RequireRole(UserRole.DISPATCHER)),
 ):
     """Update an incident (e.g. resolve it) and dispatch an event."""
     db_obj = await incident_service.get_incident(db, incident_id)
     if not db_obj:
         raise HTTPException(status_code=404, detail="Incident not found")
-        
+
     return await incident_service.update_incident(db, db_obj=db_obj, update_in=update_in)

@@ -2,7 +2,7 @@
 Predictive Intelligence Agent (PIA).
 
 Triggered when the deterministic risk score (calculated by RiskScoringService)
-crosses a critical threshold. Uses the LLM to generate a human-readable 
+crosses a critical threshold. Uses the LLM to generate a human-readable
 narrative risk analysis explaining the score, based on the contributing factors.
 
 As per ADR-0001, the LLM is invoked ONLY to generate the narrative, decoupling
@@ -19,7 +19,6 @@ from app.agents.exceptions import AgentValidationError
 from app.agents.types import AgentContext, AgentRequest, StructuredOutput
 from app.core.exceptions import LLMClientError
 from app.core.llm_client import LLMClient
-
 
 SYSTEM_PROMPT = """You are the Predictive Intelligence component of a stadium operations platform.
 A specific zone in the venue has just crossed a critical risk score threshold.
@@ -45,7 +44,16 @@ class PredictiveIntelligenceAgent(BaseAgent):
     supported_tasks: tuple[str, ...] = ("generate_narrative",)
 
     max_retries = 1
-    timeout_seconds = 20.0
+    # Must exceed the LLM client's own worst-case time, not just typical
+    # latency: generate_json can retry twice (llm_max_retries) at up to
+    # llm_timeout_seconds each, across up to two calls (initial + one
+    # corrective JSON retry) -- ~80s worst case. A shorter timeout here
+    # would let asyncio.wait_for (agents/base.py) cancel _execute() before
+    # its own try/except ever gets to run the deterministic fallback below,
+    # defeating the fallback exactly when the LLM is slow/degraded, which
+    # is the one scenario it exists for. (Found via a real degraded-model
+    # incident, not speculatively.)
+    timeout_seconds = 90.0
 
     def __init__(self, *, llm_client: LLMClient, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -56,11 +64,9 @@ class PredictiveIntelligenceAgent(BaseAgent):
     def validate_input(self, request: AgentRequest) -> None:
         super().validate_input(request)
         data = request.input_data
-        
+
         if "zone_id" not in data:
-            raise AgentValidationError(
-                f"Agent '{self.agent_id}' requires 'zone_id' in input_data"
-            )
+            raise AgentValidationError(f"Agent '{self.agent_id}' requires 'zone_id' in input_data")
         if "risk_score" not in data:
             raise AgentValidationError(
                 f"Agent '{self.agent_id}' requires 'risk_score' in input_data"
@@ -90,7 +96,9 @@ class PredictiveIntelligenceAgent(BaseAgent):
         try:
             parsed = await self._llm.generate_json(
                 system_prompt=self.system_prompt,
-                user_prompt=self._build_user_prompt(zone_id, risk_score, contributing_factors, context),
+                user_prompt=self._build_user_prompt(
+                    zone_id, risk_score, contributing_factors, context
+                ),
             )
             return self._output_from_llm(parsed)
         except LLMClientError:
@@ -98,7 +106,11 @@ class PredictiveIntelligenceAgent(BaseAgent):
             return self._fallback_narrative(zone_id, risk_score, contributing_factors)
 
     def _build_user_prompt(
-        self, zone_id: str, risk_score: float, contributing_factors: dict[str, float], context: AgentContext | None
+        self,
+        zone_id: str,
+        risk_score: float,
+        contributing_factors: dict[str, float],
+        context: AgentContext | None,
     ) -> str:
         venue_hint = f"Venue: {context.venue_id}\n" if context else ""
         return (
@@ -110,7 +122,7 @@ class PredictiveIntelligenceAgent(BaseAgent):
 
     def _output_from_llm(self, parsed: dict[str, Any]) -> StructuredOutput:
         narrative = str(parsed.get("narrative", "")).strip()
-            
+
         return StructuredOutput(
             data={
                 "narrative": narrative or "High risk detected in zone.",
@@ -125,7 +137,7 @@ class PredictiveIntelligenceAgent(BaseAgent):
     def _fallback_narrative(
         self, zone_id: str, risk_score: float, contributing_factors: dict[str, float]
     ) -> StructuredOutput:
-        
+
         # Identify the highest contributing factor
         if contributing_factors:
             primary_factor = max(contributing_factors.items(), key=lambda x: x[1])
@@ -133,7 +145,7 @@ class PredictiveIntelligenceAgent(BaseAgent):
             narrative = f"High risk score of {risk_score} detected. Primary contributing factor: {factor_name}."
         else:
             narrative = f"High risk score of {risk_score} detected in zone."
-            
+
         return StructuredOutput(
             data={
                 "narrative": narrative,

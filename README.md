@@ -29,16 +29,23 @@ StadiumPulse is fundamentally built around Generative AI, utilizing the **Google
 Traditional deterministic systems cannot parse the chaotic, unstructured nature of crowd panic or radio chatter. Gemini is used to instantly process unstructured text, understand spatial intent, and negotiate complex logistical deployment plans that a rigid algorithm could never resolve.
 
 ### The 5-Agent Multi-Agent Pipeline
-1. **Incident Analysis Agent:** Extracts intent, severity, and location from chaotic raw radio inputs.
-2. **Resource Coordination Agent:** Analyzes deterministically pre-filtered spatial data to propose the best human responder.
-3. **Operational Consensus Agent:** The "Manager". It debates proposals from other agents and builds the final deployment plan.
-4. **Predictive Intelligence Agent:** Uses RAG to analyze historical patterns and forecast crowd surges.
-5. **Tournament Memory Agent:** Embeds resolved incidents into `pgvector` for continuous future learning.
+Every incident actually runs through all five agents on creation (`IncidentService._run_agent_pipeline`, `backend/app/services/incident.py`) — each stage is independently fault-tolerant with a deterministic, non-LLM fallback if the LLM call fails, so one provider outage degrades a single stage rather than blocking incident intake:
+
+1. **Incident Analysis Agent:** Extracts intent, severity, and location from a raw incident report.
+2. **Resource Coordination Agent:** Ranks a SQL-pre-filtered, same-venue list of *available* resources for the incident.
+3. **Operational Consensus Agent:** Reviews the Resource Coordination Agent's proposal and accepts or rejects it, producing the final recommendation.
+4. **Predictive Intelligence Agent:** Generates a narrative *only* when the incident's zone has a real, currently-recorded risk score (ADR-0001's threshold-crossing trigger) — never invoked with placeholder data.
+5. **Tournament Memory Agent:** Summarizes the resolved incident, generates a vector embedding, and stores it in `pgvector` (`tournament_memory` table) for future similarity search.
+
+Every proposal/resolution turn is persisted to the `negotiations` table so the full transcript is auditable after the fact (the "Explainability Drawer" data source).
+
+> **Honest scope note:** Tournament Memory currently *writes* embeddings on every resolved incident; a future pass wires Predictive Intelligence to *query* that table for RAG-based historical pattern matching (the embed step is what makes that query meaningful once it's added — see Known Limitations).
 
 ### Responsible AI & Prompt Sandboxing
 To prevent hallucinations and Prompt Injection attacks:
-- **Hybrid Deterministic Filtering:** The AI is never allowed to guess resource locations. We use rigid SQL `pgvector` queries to filter nearby guards *before* handing the context to Gemini.
-- **XML Sandboxing:** All raw user input is securely wrapped in `<incident_data>` XML tags during the prompt construction phase, ensuring the LLM cannot be hijacked by malicious input.
+- **Hybrid Deterministic Filtering:** The AI is never asked to guess resource locations. `IncidentService._fetch_available_resources` runs a plain SQL query (venue + `status = available`, same-zone candidates first) and only ever shows the LLM resources that query already selected.
+- **XML Sandboxing:** Raw incident text is wrapped in `<incident_data>` XML tags before being handed to the Incident Analysis Agent's prompt, so the LLM treats it as data, not instructions.
+- **Structured-output contract:** Every agent call goes through `LLMClient.generate_json`, which enforces strict JSON parsing with one corrective retry before failing closed to that agent's deterministic fallback — the pipeline never silently accepts malformed model output.
 
 ```mermaid
 flowchart LR
@@ -71,7 +78,6 @@ flowchart LR
     OCA -->|Negotiate Final Plan| Final[Human Approval]
     Final -->|Resolved Incident| TMA
     TMA -->|Embed for Learning| PG
-    PG -->|RAG Context| PIA
 ```
 ---
 
@@ -79,10 +85,10 @@ flowchart LR
 
 | Evaluation Criteria      | StadiumPulse Implementation & Supporting Evidence                                                                                                                                                                                               |
 | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Problem Alignment**    | Integrates a transparent Multi-Agent workflow that directly solves the "Cognitive Overload" problem by answering "Who to send?" and "How to resolve it?" via the **Operational Consensus Agent**.                                               |
-| **Code Quality**         | Highly modular architecture with strict separation between Next.js UI, FastAPI microservices, and specialized Agent pipelines. Enforces 100% clean Ruff/Prettier linting and strictly defines Python `__init__.py` module resolution.         |
-| **Security & Privacy**   | Hardened JWT authentication using `SecretStr`, explicit SQL connection pooling limits (`pool_size=20`), sanitized `.env` handling, and robust XML Prompt Injection sandboxes.                                                                   |
-| **Accessibility (A11y)** | Natively runs `eslint-plugin-jsx-a11y` in CI/CD. Features a visually hidden "Skip to main content" link, `aria-pressed` states, and strict HTML5 semantic layout.                                                                               |
+| **Problem Alignment**    | Integrates a transparent Multi-Agent workflow that directly solves the "Cognitive Overload" problem by answering "Who to send?" and "How to resolve it?" via the **Operational Consensus Agent**, with every proposal/resolution turn persisted for later audit.                |
+| **Code Quality**         | Highly modular architecture with strict separation between Next.js UI, FastAPI microservices, and specialized Agent pipelines. CI enforces `ruff check`, `ruff format --check`, `next lint`, and `tsc --noEmit` on every push.                 |
+| **Security & Privacy**   | JWT auth (`SecretStr`-held secret, role-based `RequireRole`) on every state-mutating and data-reading endpoint, per-client-IP HTTP rate limiting (SlowAPI) independent of the LLM call budget, a JWT-gated WebSocket handshake, XML prompt-injection sandboxing on raw incident text, and a startup guard that refuses to boot in production with a placeholder/weak `JWT_SECRET`. |
+| **Accessibility (A11y)** | Runs `eslint-plugin-jsx-a11y` in CI. A visually hidden "Skip to main content" link, `aria-live` region announcing new incidents/alerts for screen readers, app-wide `prefers-reduced-motion` support (`MotionConfig` + a CSS override), and semantic landmark structure.          |
 
 ---
 
@@ -164,37 +170,47 @@ Navigate to [http://localhost:3000](http://localhost:3000) to view the Live Comm
 
 The backend provides a fully documented Swagger UI available at `http://localhost:8000/api/v1/docs`.
 
-### Example Payload: Injecting a Raw Incident
-To test the GenAI Incident Analysis Agent directly via API:
+Every incident-creation, simulation-control, and operational-state endpoint requires a bearer token — get one first, then use it:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/incidents" \
+# 1. Log in as one of the seeded demo accounts (see backend/app/db/seed.py)
+TOKEN=$(curl -s -X POST "http://localhost:8000/api/v1/auth/token" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -d "username=dispatcher@stadiumpulse.demo&password=demo-password-change-me" \
+     | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+
+# 2. Create an incident -- this runs the full 5-agent pipeline synchronously
+#    and returns the structured analysis/recommendation/consensus in the response.
+curl -X POST "http://localhost:8000/api/v1/incidents/" \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer $TOKEN" \
      -d '{
-           "raw_text": "Massive fight breaking out in Sector 102, they are throwing bottles!",
-           "venue_id": "stadium-alpha"
+           "raw_text": "Massive fight breaking out in Sector 114, they are throwing bottles!",
+           "venue_id": "11111111-1111-1111-1111-111111111111"
          }'
 ```
 
+Requests beyond the per-client-IP budget (`HTTP_RATE_LIMIT`, default `30/minute`) get a `429`, independent of any LLM-provider rate limiting.
+
 ---
 
-## 📈 Performance Metrics
+## 📈 Performance Targets
 
-StadiumPulse is built for enterprise-grade high concurrency.
+StadiumPulse is designed for the concurrency profile of a live tournament venue. These are architectural design targets driving the deterministic/generative split (ADR-0001, ADR-0004) — not independently load-tested benchmarks, so treat them as intent rather than a measured SLA:
 
-![Performance Benchmarks](public/performance.png)
-
-| Metric | Target | Actual Validation |
+| Metric | Target | Why |
 | :--- | :--- | :--- |
-| **API Latency** | < 50ms | 12ms (average via FastAPI Async) |
-| **LLM Inference** | < 2s | 1.1s (Gemini 1.5 Flash via Google GenAI) |
-| **Websocket Broadcast** | < 10ms | 3ms (Redis Pub/Sub) |
-| **Frontend Lighthouse** | > 95 | 100 Accessibility, 98 Performance |
+| **Heatmap read latency** | Redis-only, no Postgres on the hot path | ADR-0004: current risk score is cache-only; Postgres is history/audit |
+| **LLM calls per incident** | 2–5, only where a decision needs judgment | Deterministic pre-filter/scorer keeps the LLM off the hot path entirely (ADR-0001) |
+| **WebSocket fanout** | Redis pub/sub bridge, single broadcast per event | `services/event_broadcaster.py` |
 
 ---
 
 ## ⚠️ Known Limitations
-- **LLM Rate Limits:** Heavy incident bursts may temporarily queue due to Google GenAI free-tier rate limits. In production, this is mitigated via enterprise quotas.
+- **LLM Rate Limits:** Heavy incident bursts may temporarily queue due to the configured provider's free-tier rate limits (`LLM_RATE_LIMIT_PER_MINUTE`, in-process). In production, this is mitigated via enterprise quotas.
+- **Single-instance rate limiting:** Both the HTTP rate limiter (SlowAPI) and the LLM call budget use in-process state — correct for the single backend instance this deploys as today, but would need a shared Redis-backed limiter across multiple instances.
+- **Tournament Memory is write-only today:** incidents are embedded and stored on resolution, but the Predictive Intelligence Agent doesn't yet query that table for RAG-based historical pattern matching — the retrieval half of the RAG loop is the next module.
+- **Negotiation is single-proposal:** Operational Consensus currently accepts/rejects Resource Coordination's one proposal; multi-agent challenge/rebuttal rounds (the `NegotiationSession` state machine already supports the phases) aren't triggered by the live pipeline yet.
 - **WebSocket Scaling:** Single-node Redis pub/sub works flawlessly for 80,000 simulated users, but multi-region clusters require Redis Sentinel orchestration (planned for v2).
 
 ---
@@ -230,9 +246,12 @@ npm test
 ```
 
 ### Automated Checks
-- **Automated CI/CD:** A robust `.github/workflows/ci.yml` Pipeline automatically boots up Postgres/Redis, installs dependencies, and runs testing suites on every push.
-- **API Integration Tests:** Deep `pytest-asyncio` integration tests (`test_api_incidents.py`) deterministically validate the core REST endpoints.
-- **UI React Smoke Tests:** Enforces `jsdom` testing-library mount checks (`Dashboard.test.tsx`) to ensure zero-crash DOM trees.
+- **Automated CI/CD:** `.github/workflows/ci.yml` boots Postgres/Redis, then runs `ruff check`, `ruff format --check`, `next lint`, `tsc --noEmit`, and both test suites on every push — a red CI run blocks on style/type issues, not just failing tests.
+- **API Integration Tests:** `test_api_incidents.py` exercises the real HTTP surface end-to-end, including asserting the multi-agent pipeline actually produced a structured analysis, a ranked resource recommendation, a persisted negotiation transcript, and a stored Tournament Memory embedding — not just that the request returned 201.
+- **Auth Tests:** Dedicated 401/403 tests confirm unauthenticated and under-privileged requests are rejected on every write/control endpoint; `make_auth_headers` (a conftest fixture) mints real signed JWTs for a given role rather than bypassing auth with a dependency override.
+- **Config Tests:** `test_config.py` verifies the app refuses to boot in production with a placeholder or short `JWT_SECRET`.
+- **Rate Limit Test:** `test_rate_limiting.py` verifies the SlowAPI limiter actually rejects excess requests when enabled.
+- **UI Tests:** `vitest` + React Testing Library cover the WebSocket client (auth, reconnect, ping/pong, event parsing), the API client (auth headers, error envelope, 401 logout), the live-region accessibility announcer, and a Dashboard mount smoke test.
 
 ---
 

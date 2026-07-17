@@ -11,16 +11,21 @@ just the latest row where phase = 'resolution'.
 
 from __future__ import annotations
 
-import uuid
 import enum
+import uuid
+
 try:
     from enum import StrEnum
 except ImportError:
+
     class StrEnum(str, enum.Enum):
         pass
+
+
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Enum as SAEnum, ForeignKey, Integer
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -45,7 +50,12 @@ class Negotiation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         UUID(as_uuid=True), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False
     )
     phase: Mapped[NegotiationPhase] = mapped_column(
-        SAEnum(NegotiationPhase, name="negotiation_phase", values_callable=lambda obj: [e.value for e in obj]), nullable=False
+        SAEnum(
+            NegotiationPhase,
+            name="negotiation_phase",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=False,
     )
     # Monotonic per-incident turn counter so the frontend can render the
     # transcript in order without relying on timestamp precision alone.
@@ -65,4 +75,6 @@ class Negotiation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     incident: Mapped["Incident"] = relationship(back_populates="negotiations")
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"<Negotiation incident={self.incident_id} phase={self.phase} turn={self.turn_number}>"
+        return (
+            f"<Negotiation incident={self.incident_id} phase={self.phase} turn={self.turn_number}>"
+        )

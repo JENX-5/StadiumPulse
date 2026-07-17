@@ -53,6 +53,7 @@ async def seed() -> None:
 
     async with session_scope(session_factory) as session:
         import uuid
+
         from sqlalchemy import select
 
         venue_id = uuid.UUID("11111111-1111-1111-1111-111111111111")

@@ -20,7 +20,16 @@ function buildSeries(values: number[], fallback: number, points = 8) {
 }
 
 function TrendSparkline({ data, tone }: { data: { index: number; value: number }[]; tone: MetricTone }) {
-  const stroke = tone === "red" ? "#111111" : tone === "amber" ? "#374151" : tone === "green" ? "#111111" : "#6b7280";
+  const stroke =
+    tone === "red"
+      ? "#ef4444"
+      : tone === "amber"
+        ? "#f59e0b"
+        : tone === "green"
+          ? "#10b981"
+          : tone === "blue"
+            ? "#3b82f6"
+            : "#6b7280";
 
   return (
     <div className="h-14 w-full">
@@ -60,10 +69,10 @@ function MetricCard({
   sparkline: { index: number; value: number }[];
 }) {
   const toneClasses = {
-    blue: "from-slate-500/10 to-slate-500/5 text-slate-700 ring-slate-200 dark:from-slate-500/20 dark:to-slate-500/10 dark:text-slate-200 dark:ring-slate-500/20",
-    green: "from-slate-500/10 to-slate-500/5 text-slate-700 ring-slate-200 dark:from-slate-500/20 dark:to-slate-500/10 dark:text-slate-200 dark:ring-slate-500/20",
-    amber: "from-slate-500/10 to-slate-500/5 text-slate-700 ring-slate-200 dark:from-slate-500/20 dark:to-slate-500/10 dark:text-slate-200 dark:ring-slate-500/20",
-    red: "from-slate-500/10 to-slate-500/5 text-slate-700 ring-slate-200 dark:from-slate-500/20 dark:to-slate-500/10 dark:text-slate-200 dark:ring-slate-500/20",
+    blue: "from-blue-500/10 to-blue-500/5 text-blue-700 ring-blue-200 dark:from-blue-500/20 dark:to-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20",
+    green: "from-emerald-500/10 to-emerald-500/5 text-emerald-700 ring-emerald-200 dark:from-emerald-500/20 dark:to-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20",
+    amber: "from-amber-500/10 to-amber-500/5 text-amber-700 ring-amber-200 dark:from-amber-500/20 dark:to-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20",
+    red: "from-red-500/10 to-red-500/5 text-red-700 ring-red-200 dark:from-red-500/20 dark:to-red-500/10 dark:text-red-300 dark:ring-red-500/20",
     slate: "from-slate-500/10 to-slate-500/5 text-slate-600 ring-slate-100 dark:from-slate-500/20 dark:to-slate-500/10 dark:text-slate-200 dark:ring-slate-500/20",
   }[tone];
 

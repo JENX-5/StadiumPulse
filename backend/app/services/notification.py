@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class NotificationInfrastructure:
     """Handles queued delivery of high-priority notifications.
-    
+
     Future AI agents (e.g. Predictive Intelligence) will use this to alert
     dispatchers of escalating risks before incidents actually occur.
     """
@@ -17,7 +17,9 @@ class NotificationInfrastructure:
         self.redis = Redis.from_url(redis_url, decode_responses=True)
         self.QUEUE_KEY = "notifications:queue"
 
-    async def enqueue(self, message: str, priority: str = "normal", recipient_id: str | None = None) -> None:
+    async def enqueue(
+        self, message: str, priority: str = "normal", recipient_id: str | None = None
+    ) -> None:
         """Enqueue a notification for delivery."""
         notification = {
             "message": message,

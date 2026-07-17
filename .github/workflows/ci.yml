@@ -36,8 +36,18 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r backend/requirements.txt
-        pip install pytest-cov
-        
+        pip install pytest-cov ruff
+
+    - name: Ruff lint
+      run: |
+        cd backend
+        ruff check .
+
+    - name: Ruff format check
+      run: |
+        cd backend
+        ruff format --check .
+
     - name: Run backend tests
       env:
         DATABASE_URL: postgresql+asyncpg://stadiumpulse:change_me_in_local_env@localhost:5432/stadiumpulse
@@ -63,7 +73,17 @@ jobs:
       run: |
         cd frontend
         npm ci
-        
+
+    - name: Lint
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Type check
+      run: |
+        cd frontend
+        npm run type-check
+
     - name: Run frontend tests
       run: |
         cd frontend

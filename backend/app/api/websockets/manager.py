@@ -19,7 +19,9 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-            logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+            logger.info(
+                f"WebSocket disconnected. Total connections: {len(self.active_connections)}"
+            )
 
     async def broadcast(self, message: str):
         """Broadcast a message (usually JSON event payload) to all connected clients."""

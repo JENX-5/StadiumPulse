@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 
 import structlog
 
